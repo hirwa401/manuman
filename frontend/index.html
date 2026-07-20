@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ManuMan Mobility – Reliable Cars. Exceptional Experiences.</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <img src="images/logo.jpeg" alt="ManuMan Mobility Logo" />
+      </a>
+      <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#fleet">Our Fleet</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#why">Why Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#booking" class="btn-nav">Book Now</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Reliable Cars.<br/><span>Exceptional Experiences.</span></h1>
+      <p>Portland, Maine's trusted car rental — Airport delivery available.</p>
+      <a href="#booking" class="btn-primary">Reserve Your Car</a>
+    </div>
+
+    <!-- BOOKING WIDGET -->
+    <div class="booking-bar" id="booking">
+      <form class="booking-form" id="bookingForm">
+        <div class="form-group">
+          <label><i class="fas fa-map-marker-alt"></i> Pick-up Location</label>
+          <input type="text" name="pickup" placeholder="Portland, ME / Airport" required />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-calendar-alt"></i> Pick-up Date</label>
+          <input type="date" name="pickupDate" required />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-calendar-check"></i> Return Date</label>
+          <input type="date" name="returnDate" required />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-car"></i> Vehicle</label>
+          <select name="vehicle" required>
+            <option value="">Select a car</option>
+            <option value="rav4">2022 Toyota RAV4 Hybrid</option>
+            <option value="odyssey">2017 Honda Odyssey XL</option>
+            <option value="cruze">2018 Chevrolet Cruze</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar">
+    <div class="trust-item"><i class="fas fa-plane"></i><span>Airport Delivery</span></div>
+    <div class="trust-item"><i class="fas fa-shield-alt"></i><span>Clean & Maintained</span></div>
+    <div class="trust-item"><i class="fas fa-clock"></i><span>On Time. Every Time.</span></div>
+    <div class="trust-item"><i class="fas fa-user-tie"></i><span>Exceptional Service</span></div>
+    <div class="trust-item"><i class="fas fa-star"></i><span>5-Star Turo Host</span></div>
+  </div>
+
+  <!-- FLEET -->
+  <section class="fleet" id="fleet">
+    <div class="section-header">
+      <h2>Our Fleet</h2>
+      <p>Choose the perfect vehicle for your trip</p>
+    </div>
+    <div class="cars-grid">
+
+      <div class="car-card">
+        <div class="car-badge">SUV</div>
+        <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&q=80" alt="2022 Toyota RAV4 Hybrid" />
+        <div class="car-info">
+          <div class="car-title">
+            <span class="car-year">2022</span>
+            <h3>Toyota RAV4 Hybrid</h3>
+          </div>
+          <ul class="car-features">
+            <li><i class="fas fa-check-circle"></i> Fuel Efficient Hybrid</li>
+            <li><i class="fas fa-check-circle"></i> All-Wheel Drive (AWD)</li>
+            <li><i class="fas fa-check-circle"></i> Spacious & Comfortable</li>
+            <li><i class="fas fa-check-circle"></i> Ideal for All Seasons</li>
+          </ul>
+          <div class="car-footer">
+            <div class="car-price">From <strong>$75</strong>/day</div>
+            <a href="#booking" class="btn-secondary">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="car-card featured">
+        <div class="car-badge">MINIVAN</div>
+        <div class="featured-tag">Most Popular</div>
+        <img src="https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=600&q=80" alt="2017 Honda Odyssey XL" />
+        <div class="car-info">
+          <div class="car-title">
+            <span class="car-year">2017</span>
+            <h3>Honda Odyssey XL</h3>
+          </div>
+          <ul class="car-features">
+            <li><i class="fas fa-check-circle"></i> 8-Passenger Seating</li>
+            <li><i class="fas fa-check-circle"></i> Power Sliding Doors</li>
+            <li><i class="fas fa-check-circle"></i> Tri-Zone Climate Control</li>
+            <li><i class="fas fa-check-circle"></i> Perfect for Family Trips</li>
+          </ul>
+          <div class="car-footer">
+            <div class="car-price">From <strong>$85</strong>/day</div>
+            <a href="#booking" class="btn-secondary">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="car-card">
+        <div class="car-badge">SEDAN</div>
+        <img src="images/cruze.jpeg" alt="2018 Chevrolet Cruze" />
+        <div class="car-info">
+          <div class="car-title">
+            <span class="car-year">2018</span>
+            <h3>Chevrolet Cruze</h3>
+          </div>
+          <ul class="car-features">
+            <li><i class="fas fa-check-circle"></i> Great on Gas</li>
+            <li><i class="fas fa-check-circle"></i> Easy to Park</li>
+            <li><i class="fas fa-check-circle"></i> Smooth & Reliable</li>
+            <li><i class="fas fa-check-circle"></i> Perfect for Daily Use</li>
+          </ul>
+          <div class="car-footer">
+            <div class="car-price">From <strong>$55</strong>/day</div>
+            <a href="#booking" class="btn-secondary">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works" id="how">
+    <div class="section-header light">
+      <h2>How It Works</h2>
+      <p>Renting a car has never been easier</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon"><i class="fas fa-search"></i></div>
+        <h3>1. Choose Your Car</h3>
+        <p>Browse our fleet and pick the vehicle that fits your needs and budget.</p>
+      </div>
+      <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
+      <div class="step">
+        <div class="step-icon"><i class="fas fa-calendar-alt"></i></div>
+        <h3>2. Book Online</h3>
+        <p>Select your dates, fill in your details, and confirm your reservation instantly.</p>
+      </div>
+      <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
+      <div class="step">
+        <div class="step-icon"><i class="fas fa-car"></i></div>
+        <h3>3. Pick Up & Go</h3>
+        <p>We deliver to Portland Airport or your preferred location — on time, every time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <section class="why-us" id="why">
+    <div class="section-header">
+      <h2>Why Choose ManuMan Mobility?</h2>
+      <p>Portland, Maine's most trusted car rental service</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <i class="fas fa-star"></i>
+        <h3>5-Star Turo Host</h3>
+        <p>Consistently rated 5 stars by our customers on Turo.</p>
+      </div>
+      <div class="why-card">
+        <i class="fas fa-plane"></i>
+        <h3>Airport Delivery</h3>
+        <p>We bring the car to Portland Jetport — no shuttle needed.</p>
+      </div>
+      <div class="why-card">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Clean & Safe</h3>
+        <p>Every vehicle is thoroughly cleaned and inspected before each rental.</p>
+      </div>
+      <div class="why-card">
+        <i class="fas fa-dollar-sign"></i>
+        <h3>Best Value</h3>
+        <p>Competitive rates with no hidden fees. What you see is what you pay.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="section-header light">
+      <h2>What Our Customers Say</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Amazing experience! The car was spotless and delivered right to the airport. Will definitely rent again."</p>
+        <span>— Sarah M., Portland</span>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Best car rental in Maine. The RAV4 was perfect for our family road trip. Super professional service."</p>
+        <span>— James T., Boston</span>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Reliable, affordable, and on time. The Cruze was exactly what I needed for my business trip."</p>
+        <span>— Linda K., Augusta</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="section-header">
+      <h2>Get In Touch</h2>
+      <p>We're here to help — call, email, or send us a message</p>
+    </div>
+    <div class="contact-wrapper">
+      <div class="contact-info">
+        <div class="contact-item">
+          <i class="fas fa-phone"></i>
+          <div>
+            <strong>Call or Text Anytime</strong>
+            <a href="tel:2072450080">207-245-0080</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-envelope"></i>
+          <div>
+            <strong>Email Us</strong>
+            <a href="mailto:dushemmanuel@yahoo.fr">dushemmanuel@yahoo.fr</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-map-marker-alt"></i>
+          <div>
+            <strong>Location</strong>
+            <span>Portland, Maine</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-globe"></i>
+          <div>
+            <strong>Website</strong>
+            <a href="https://manumanmobility.com">manumanmobility.com</a>
+          </div>
+        </div>
+      </div>
+
+      <form class="contact-form" id="contactForm">
+        <input type="text" name="name" placeholder="Your Name" required />
+        <input type="email" name="email" placeholder="Your Email" required />
+        <input type="tel" name="phone" placeholder="Your Phone (optional)" />
+        <textarea name="message" rows="4" placeholder="Your Message" required></textarea>
+        <button type="submit" class="btn-primary">Send Message</button>
+        <div class="form-msg" id="contactMsg"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="images/logo.jpeg" alt="ManuMan Mobility" />
+        <p>Reliable Cars. Exceptional Experiences.<br/>Portland, Maine</p>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#fleet">Our Fleet</a></li>
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#why">Why Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <p><i class="fas fa-phone"></i> 207-245-0080</p>
+        <p><i class="fas fa-envelope"></i> dushemmanuel@yahoo.fr</p>
+        <p><i class="fas fa-map-marker-alt"></i> Portland, Maine</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 ManuMan Mobility. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
