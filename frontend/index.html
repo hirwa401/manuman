@@ -52,11 +52,8 @@
         </div>
         <div class="form-group">
           <label><i class="fas fa-car"></i> Vehicle</label>
-          <select name="vehicle" required>
+          <select name="vehicle" id="vehicleSelect" required>
             <option value="">Select a car</option>
-            <option value="rav4">2022 Toyota RAV4 Hybrid</option>
-            <option value="odyssey">2017 Honda Odyssey XL</option>
-            <option value="cruze">2018 Chevrolet Cruze</option>
           </select>
         </div>
         <button type="submit" class="btn-primary">Search</button>
@@ -79,73 +76,7 @@
       <h2>Our Fleet</h2>
       <p>Choose the perfect vehicle for your trip</p>
     </div>
-    <div class="cars-grid">
-
-      <div class="car-card">
-        <div class="car-badge">SUV</div>
-        <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&q=80" alt="2022 Toyota RAV4 Hybrid" />
-        <div class="car-info">
-          <div class="car-title">
-            <span class="car-year">2022</span>
-            <h3>Toyota RAV4 Hybrid</h3>
-          </div>
-          <ul class="car-features">
-            <li><i class="fas fa-check-circle"></i> Fuel Efficient Hybrid</li>
-            <li><i class="fas fa-check-circle"></i> All-Wheel Drive (AWD)</li>
-            <li><i class="fas fa-check-circle"></i> Spacious & Comfortable</li>
-            <li><i class="fas fa-check-circle"></i> Ideal for All Seasons</li>
-          </ul>
-          <div class="car-footer">
-            <div class="car-price">From <strong>$75</strong>/day</div>
-            <a href="#booking" class="btn-secondary">Book Now</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="car-card featured">
-        <div class="car-badge">MINIVAN</div>
-        <div class="featured-tag">Most Popular</div>
-        <img src="https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=600&q=80" alt="2017 Honda Odyssey XL" />
-        <div class="car-info">
-          <div class="car-title">
-            <span class="car-year">2017</span>
-            <h3>Honda Odyssey XL</h3>
-          </div>
-          <ul class="car-features">
-            <li><i class="fas fa-check-circle"></i> 8-Passenger Seating</li>
-            <li><i class="fas fa-check-circle"></i> Power Sliding Doors</li>
-            <li><i class="fas fa-check-circle"></i> Tri-Zone Climate Control</li>
-            <li><i class="fas fa-check-circle"></i> Perfect for Family Trips</li>
-          </ul>
-          <div class="car-footer">
-            <div class="car-price">From <strong>$85</strong>/day</div>
-            <a href="#booking" class="btn-secondary">Book Now</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="car-card">
-        <div class="car-badge">SEDAN</div>
-        <img src="images/cruze.jpeg" alt="2018 Chevrolet Cruze" />
-        <div class="car-info">
-          <div class="car-title">
-            <span class="car-year">2018</span>
-            <h3>Chevrolet Cruze</h3>
-          </div>
-          <ul class="car-features">
-            <li><i class="fas fa-check-circle"></i> Great on Gas</li>
-            <li><i class="fas fa-check-circle"></i> Easy to Park</li>
-            <li><i class="fas fa-check-circle"></i> Smooth & Reliable</li>
-            <li><i class="fas fa-check-circle"></i> Perfect for Daily Use</li>
-          </ul>
-          <div class="car-footer">
-            <div class="car-price">From <strong>$55</strong>/day</div>
-            <a href="#booking" class="btn-secondary">Book Now</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    <div class="cars-grid" id="carsGrid"><p style="text-align:center;color:#888;padding:40px">Loading fleet...</p></div>
   </section>
 
   <!-- HOW IT WORKS -->
@@ -248,7 +179,7 @@
           <i class="fas fa-envelope"></i>
           <div>
             <strong>Email Us</strong>
-            <a href="mailto:dushemmanuel@yahoo.fr">dushemmanuel@yahoo.fr</a>
+            <a href="mailto:Manumanmobility@gmail.com">Manumanmobility@gmail.com</a>
           </div>
         </div>
         <div class="contact-item">
@@ -297,7 +228,7 @@
       <div class="footer-contact">
         <h4>Contact</h4>
         <p><i class="fas fa-phone"></i> 207-245-0080</p>
-        <p><i class="fas fa-envelope"></i> dushemmanuel@yahoo.fr</p>
+        <p><i class="fas fa-envelope"></i> Manumanmobility@gmail.com</p>
         <p><i class="fas fa-map-marker-alt"></i> Portland, Maine</p>
       </div>
     </div>

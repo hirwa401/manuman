@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – ManuMan Mobility</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --gold: #F5A800;
+      --gold-dark: #d4900a;
+      --navy: #0d1b2a;
+      --dark: #1a1a1a;
+      --white: #fff;
+      --gray: #f4f4f4;
+      --text: #333;
+      --red: #e53935;
+      --green: #2e7d32;
+      --orange: #e65100;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gray); color: var(--text); }
+
+    /* LOGIN */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy);
+    }
+    .login-box {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .login-box img { height: 60px; border-radius: 6px; margin-bottom: 20px; }
+    .login-box h2 { font-size: 1.4rem; color: var(--navy); margin-bottom: 6px; }
+    .login-box p { font-size: 0.85rem; color: #888; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .login-box input:focus { border-color: var(--gold); }
+    .login-box button {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold);
+      color: var(--dark);
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-box button:hover { background: var(--gold-dark); }
+    .login-error { color: var(--red); font-size: 0.85rem; margin-top: 10px; min-height: 18px; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 240px;
+      height: 100vh;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo img { height: 44px; border-radius: 6px; }
+    .sidebar-logo span {
+      display: block;
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+    .sidebar nav { flex: 1; padding: 20px 0; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 24px;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.92rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active {
+      color: var(--white);
+      background: rgba(245,168,0,0.12);
+      border-left: 3px solid var(--gold);
+    }
+    .sidebar nav a i { width: 18px; text-align: center; }
+    .sidebar-footer {
+      padding: 20px 24px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-footer button {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.6);
+      padding: 9px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .sidebar-footer button:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main {
+      margin-left: 240px;
+      padding: 32px;
+      min-height: 100vh;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .topbar h1 { font-size: 1.6rem; color: var(--navy); font-weight: 800; }
+    .topbar span { font-size: 0.85rem; color: #888; }
+
+    /* STATS */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 36px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      width: 50px; height: 50px;
+      border-radius: 10px;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--dark);
+      flex-shrink: 0;
+    }
+    .stat-info strong { display: block; font-size: 1.8rem; font-weight: 800; color: var(--navy); }
+    .stat-info span { font-size: 0.82rem; color: #888; }
+
+    /* SECTION */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* TABLE */
+    .table-card {
+      background: var(--white);
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header h3 { font-size: 1rem; color: var(--navy); font-weight: 700; }
+    .table-header span { font-size: 0.82rem; color: #888; }
+    .refresh-btn {
+      background: var(--gold);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--dark);
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: var(--gold-dark); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: var(--navy);
+      color: var(--white);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+    tbody tr:hover { background: #fafafa; }
+    tbody td { padding: 13px 16px; color: var(--text); vertical-align: middle; }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-pending { background: #fff3e0; color: var(--orange); }
+    .badge-confirmed { background: #e8f5e9; color: var(--green); }
+    .badge-cancelled { background: #ffebee; color: var(--red); }
+
+    .action-btn {
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 4px;
+      transition: opacity 0.2s;
+    }
+    .action-btn:hover { opacity: 0.8; }
+    .btn-confirm { background: #e8f5e9; color: var(--green); }
+    .btn-cancel { background: #ffebee; color: var(--red); }
+    .btn-delete { background: #ffebee; color: var(--red); }
+
+    .empty-row td { text-align: center; color: #aaa; padding: 40px; font-style: italic; }
+
+    /* FLEET GRID */
+    .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .fleet-card {
+      background: var(--white);
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .fleet-card img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
+    .fleet-card-body { padding: 16px; }
+    .fleet-card-body h3 { font-size: 1rem; color: var(--navy); margin-bottom: 4px; }
+    .fleet-card-body .price { color: var(--gold); font-weight: 700; font-size: 1rem; margin-bottom: 10px; }
+    .fleet-card-body .cat { font-size: 0.75rem; background: var(--navy); color: var(--gold); padding: 2px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+    .fleet-card-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    }
+    .modal h3 { font-size: 1.2rem; color: var(--navy); margin-bottom: 20px; }
+    .modal label { display: block; font-size: 0.8rem; font-weight: 600; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+    .modal input, .modal select, .modal textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #ddd;
+      border-radius: 6px; font-size: 0.92rem; margin-bottom: 14px; outline: none; font-family: inherit;
+    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--gold); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .btn-save { background: var(--gold); border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+    .btn-save:hover { background: var(--gold-dark); }
+    .btn-close-modal { background: #eee; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+    .add-car-btn { background: var(--gold); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.88rem; color: var(--dark); }
+    .add-car-btn:hover { background: var(--gold-dark); }
+
+    /* MOBILE */
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 16px; left: 16px;
+      z-index: 200;
+      background: var(--gold);
+      border: none;
+      border-radius: 6px;
+      width: 40px; height: 40px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--dark);
+    }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; align-items: center; justify-content: center; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 20px 16px; padding-top: 64px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <img src="images/logo.jpeg" alt="ManuMan Mobility"/>
+    <h2>Admin Dashboard</h2>
+    <p>Enter your password to continue</p>
+    <input type="password" id="adminPassword" placeholder="Password" onkeydown="if(event.key==='Enter') login()"/>
+    <button onclick="login()"><i class="fas fa-lock"></i> Login</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+<div id="dashboard">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="images/logo.jpeg" alt="ManuMan Mobility"/>
+      <span>Admin Panel</span>
+    </div>
+    <nav>
+      <a class="active" onclick="showSection('overview')"><i class="fas fa-chart-pie"></i> Overview</a>
+      <a onclick="showSection('bookings')"><i class="fas fa-calendar-check"></i> Bookings</a>
+      <a onclick="showSection('contacts')"><i class="fas fa-envelope"></i> Messages</a>
+      <a onclick="showSection('fleet')"><i class="fas fa-car"></i> Fleet</a>
+      <a href="index.html" target="_blank"><i class="fas fa-globe"></i> View Website</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">Overview</h1>
+      <span id="currentDate"></span>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="section-overview">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-info"><strong id="totalBookings">0</strong><span>Total Bookings</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-info"><strong id="pendingBookings">0</strong><span>Pending</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info"><strong id="confirmedBookings">0</strong><span>Confirmed</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-envelope"></i></div>
+          <div class="stat-info"><strong id="totalMessages">0</strong><span>Messages</span></div>
+        </div>
+      </div>
+
+      <!-- Recent bookings preview -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Recent Bookings</h3>
+          <button class="refresh-btn" onclick="loadAll()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vehicle</th><th>Pick-up</th><th>Dates</th><th>Status</th></tr></thead>
+            <tbody id="recentBookingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="section" id="section-bookings">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>All Bookings</h3>
+          <button class="refresh-btn" onclick="loadBookings()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vehicle</th>
+                <th>Pick-up Location</th>
+                <th>Pick-up Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+                <th>Received</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="section" id="section-contacts">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Contact Messages</h3>
+          <button class="refresh-btn" onclick="loadContacts()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Message</th>
+                <th>Received</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="contactsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLEET -->
+    <div class="section" id="section-fleet">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div></div>
+        <div style="display:flex;gap:10px">
+          <button class="refresh-btn" onclick="loadFleet()"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="add-car-btn" onclick="openModal()"><i class="fas fa-plus"></i> Add Car</button>
+        </div>
+      </div>
+      <div class="fleet-grid" id="fleetGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FLEET MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add New Car</h3>
+    <input type="hidden" id="editCarId"/>
+    <label>Year</label>
+    <input type="text" id="carYear" placeholder="e.g. 2023" />
+    <label>Make</label>
+    <input type="text" id="carMake" placeholder="e.g. Toyota" />
+    <label>Model</label>
+    <input type="text" id="carModel" placeholder="e.g. Camry" />
+    <label>Category</label>
+    <select id="carCategory">
+      <option value="SEDAN">Sedan</option>
+      <option value="SUV">SUV</option>
+      <option value="MINIVAN">Minivan</option>
+      <option value="TRUCK">Truck</option>
+      <option value="LUXURY">Luxury</option>
+    </select>
+    <label>Price per Day ($)</label>
+    <input type="number" id="carPrice" placeholder="e.g. 65" min="1" />
+    <label>Image URL</label>
+    <input type="text" id="carImage" placeholder="https://... or leave blank" />
+    <label>Features (one per line)</label>
+    <textarea id="carFeatures" rows="4" placeholder="Fuel Efficient&#10;All-Wheel Drive&#10;Spacious Interior"></textarea>
+    <div class="modal-actions">
+      <button class="btn-close-modal" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveCar()">Save Car</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api';
+  let allBookings = [], allContacts = [];
+
+  // ── AUTH ──────────────────────────────────────────────────
+  async function login() {
+    const pw = document.getElementById('adminPassword').value;
+    const err = document.getElementById('loginError');
+    if (!pw) { err.textContent = 'Please enter a password.'; return; }
+    try {
+      const res = await fetch(`${API}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('adminAuth', 'true');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('menuToggle').style.display = '';
+        loadAll();
+      } else {
+        err.textContent = '❌ Wrong password. Try again.';
+      }
+    } catch {
+      err.textContent = '❌ Cannot connect to server. Is it running?';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('adminAuth');
+    location.reload();
+  }
+
+  // Auto-restore session
+  if (sessionStorage.getItem('adminAuth')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadAll();
+  }
+
+  // ── NAVIGATION ────────────────────────────────────────────
+  const titles = { overview: 'Overview', bookings: 'Bookings', contacts: 'Messages', fleet: 'Fleet Management' };
+
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    document.querySelectorAll('.sidebar nav a')[['overview','bookings','contacts','fleet'].indexOf(name)].classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[name] || name;
+    if (name === 'bookings') loadBookings();
+    if (name === 'contacts') loadContacts();
+    if (name === 'fleet') loadFleet();
+    closeSidebar();
+  }
+
+  function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
+
+  // ── DATE ──────────────────────────────────────────────────
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // ── LOAD ALL ──────────────────────────────────────────────
+  async function loadAll() {
+    await Promise.all([loadBookings(), loadContacts()]);
+    updateStats();
+    renderRecentBookings();
+  }
+
+  // ── FLEET ─────────────────────────────────────────────────
+  let allFleet = [];
+
+  async function loadFleet() {
+    try {
+      const res = await fetch(`${API}/fleet`);
+      allFleet = await res.json();
+      renderFleet();
+    } catch { document.getElementById('fleetGrid').innerHTML = '<p style="color:#aaa;padding:20px">⚠️ Could not load fleet.</p>'; }
+  }
+
+  function renderFleet() {
+    const grid = document.getElementById('fleetGrid');
+    if (!allFleet.length) { grid.innerHTML = '<p style="color:#aaa;padding:20px">No cars in fleet yet. Click "Add Car" to get started.</p>'; return; }
+    grid.innerHTML = allFleet.map(car => `
+      <div class="fleet-card">
+        <img src="${car.imageUrl || 'images/fleet-card.png'}" alt="${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'"/>
+        <div class="fleet-card-body">
+          <span class="cat">${car.category}</span>
+          <h3>${car.year} ${car.make} ${car.model}</h3>
+          <div class="price">$${car.price}/day</div>
+        </div>
+        <div class="fleet-card-actions">
+          <button class="action-btn btn-confirm" onclick="openModal('${car._id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="action-btn btn-delete" onclick="deleteCar('${car._id}')"><i class="fas fa-trash"></i> Remove</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function openModal(id) {
+    document.getElementById('editCarId').value = '';
+    document.getElementById('carYear').value = '';
+    document.getElementById('carMake').value = '';
+    document.getElementById('carModel').value = '';
+    document.getElementById('carCategory').value = 'SEDAN';
+    document.getElementById('carPrice').value = '';
+    document.getElementById('carImage').value = '';
+    document.getElementById('carFeatures').value = '';
+    document.getElementById('modalTitle').textContent = 'Add New Car';
+    if (id) {
+      const car = allFleet.find(c => c._id === id);
+      if (!car) return;
+      document.getElementById('modalTitle').textContent = 'Edit Car';
+      document.getElementById('editCarId').value = car._id;
+      document.getElementById('carYear').value = car.year;
+      document.getElementById('carMake').value = car.make;
+      document.getElementById('carModel').value = car.model;
+      document.getElementById('carCategory').value = car.category;
+      document.getElementById('carPrice').value = car.price;
+      document.getElementById('carImage').value = car.imageUrl || '';
+      document.getElementById('carFeatures').value = (car.features || []).join('\n');
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+  async function saveCar() {
+    const id = document.getElementById('editCarId').value;
+    const payload = {
+      year: document.getElementById('carYear').value.trim(),
+      make: document.getElementById('carMake').value.trim(),
+      model: document.getElementById('carModel').value.trim(),
+      category: document.getElementById('carCategory').value,
+      price: document.getElementById('carPrice').value,
+      imageUrl: document.getElementById('carImage').value.trim(),
+      features: document.getElementById('carFeatures').value.split('\n').map(f => f.trim()).filter(Boolean)
+    };
+    if (!payload.year || !payload.make || !payload.model || !payload.price) {
+      alert('Please fill in year, make, model and price.'); return;
+    }
+    try {
+      const url = id ? `${API}/fleet/${id}` : `${API}/fleet`;
+      const method = id ? 'PUT' : 'POST';
+      await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      closeModal();
+      loadFleet();
+    } catch { alert('Error saving car.'); }
+  }
+
+  async function deleteCar(id) {
+    if (!confirm('Remove this car from the fleet?')) return;
+    try {
+      await fetch(`${API}/fleet/${id}`, { method: 'DELETE' });
+      loadFleet();
+    } catch { alert('Error deleting car.'); }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+  // ── BOOKINGS ──────────────────────────────────────────────
+  async function loadBookings() {
+    try {
+      const res = await fetch(`${API}/bookings`);
+      allBookings = await res.json();
+      renderBookings();
+      updateStats();
+      renderRecentBookings();
+    } catch { renderError('bookingsBody', 8); }
+  }
+
+  function renderBookings() {
+    const tbody = document.getElementById('bookingsBody');
+    if (!allBookings.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No bookings yet.</td></tr>`; return; }
+    tbody.innerHTML = allBookings.map((b, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${vehicleLabel(b.vehicle)}</strong></td>
+        <td>${b.pickup}</td>
+        <td>${formatDate(b.pickupDate)}</td>
+        <td>${formatDate(b.returnDate)}</td>
+        <td><span class="badge badge-${b.status}">${b.status}</span></td>
+        <td>${timeAgo(b.createdAt)}</td>
+        <td>
+          ${b.status !== 'confirmed' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b._id}','confirmed')"><i class="fas fa-check"></i> Confirm</button>` : ''}
+          ${b.status !== 'cancelled' ? `<button class="action-btn btn-cancel" onclick="updateStatus('${b._id}','cancelled')"><i class="fas fa-times"></i> Cancel</button>` : ''}
+          <button class="action-btn btn-delete" onclick="deleteBooking('${b._id}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function renderRecentBookings() {
+    const tbody = document.getElementById('recentBookingsBody');
+    const recent = allBookings.slice(0, 5);
+    if (!recent.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No bookings yet.</td></tr>`; return; }
+    tbody.innerHTML = recent.map(b => `
+      <tr>
+        <td><strong>${vehicleLabel(b.vehicle)}</strong></td>
+        <td>${b.pickup}</td>
+        <td>${formatDate(b.pickupDate)} → ${formatDate(b.returnDate)}</td>
+        <td><span class="badge badge-${b.status}">${b.status}</span></td>
+      </tr>`).join('');
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      await fetch(`${API}/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadBookings();
+    } catch { alert('Error updating status.'); }
+  }
+
+  async function deleteBooking(id) {
+    if (!confirm('Delete this booking?')) return;
+    try {
+      await fetch(`${API}/bookings/${id}`, { method: 'DELETE' });
+      loadBookings();
+    } catch { alert('Error deleting booking.'); }
+  }
+
+  // ── CONTACTS ──────────────────────────────────────────────
+  async function loadContacts() {
+    try {
+      const res = await fetch(`${API}/contacts`);
+      allContacts = await res.json();
+      renderContacts();
+      updateStats();
+    } catch { renderError('contactsBody', 7); }
+  }
+
+  function renderContacts() {
+    const tbody = document.getElementById('contactsBody');
+    if (!allContacts.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No messages yet.</td></tr>`; return; }
+    tbody.innerHTML = allContacts.map((c, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${c.name}</strong></td>
+        <td><a href="mailto:${c.email}">${c.email}</a></td>
+        <td>${c.phone || '—'}</td>
+        <td style="max-width:260px;white-space:normal">${c.message}</td>
+        <td>${timeAgo(c.createdAt)}</td>
+        <td><button class="action-btn btn-delete" onclick="deleteContact('${c._id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>`).join('');
+  }
+
+  async function deleteContact(id) {
+    if (!confirm('Delete this message?')) return;
+    try {
+      await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
+      loadContacts();
+    } catch { alert('Error deleting message.'); }
+  }
+
+  // ── STATS ─────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('totalBookings').textContent = allBookings.length;
+    document.getElementById('pendingBookings').textContent = allBookings.filter(b => b.status === 'pending').length;
+    document.getElementById('confirmedBookings').textContent = allBookings.filter(b => b.status === 'confirmed').length;
+    document.getElementById('totalMessages').textContent = allContacts.length;
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────
+  function vehicleLabel(v) {
+    return { rav4: '2022 Toyota RAV4 Hybrid', odyssey: '2017 Honda Odyssey XL', cruze: '2018 Chevrolet Cruze' }[v] || v;
+  }
+  function formatDate(d) {
+    if (!d) return '—';
+    const [y, m, day] = d.split('-');
+    return `${m}/${day}/${y}`;
+  }
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+  function renderError(tbodyId, cols) {
+    document.getElementById(tbodyId).innerHTML = `<tr class="empty-row"><td colspan="${cols}">⚠️ Could not load data. Is the server running?</td></tr>`;
+  }
+</script>
+</body>
+</html>

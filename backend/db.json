@@ -1,0 +1,63 @@
+{
+  "bookings": [],
+  "contacts": [
+    {
+      "_id": "a7a8ef4a-8147-4c78-a1ee-39920d07fc04",
+      "name": "hirwa Rayan",
+      "email": "ur0935806@gmail.com",
+      "phone": "",
+      "message": "i want the car",
+      "createdAt": "2026-07-24T17:06:55.158Z"
+    }
+  ],
+  "fleet": [
+    {
+      "_id": "1",
+      "year": "2022",
+      "make": "Toyota",
+      "model": "RAV4 Hybrid",
+      "category": "SUV",
+      "price": 75,
+      "imageUrl": "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&q=80",
+      "features": [
+        "Fuel Efficient Hybrid",
+        "All-Wheel Drive (AWD)",
+        "Spacious & Comfortable",
+        "Ideal for All Seasons"
+      ],
+      "available": true
+    },
+    {
+      "_id": "2",
+      "year": "2017",
+      "make": "Honda",
+      "model": "Odyssey XL",
+      "category": "MINIVAN",
+      "price": 85,
+      "imageUrl": "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=600&q=80",
+      "features": [
+        "8-Passenger Seating",
+        "Power Sliding Doors",
+        "Tri-Zone Climate Control",
+        "Perfect for Family Trips"
+      ],
+      "available": true
+    },
+    {
+      "_id": "3",
+      "year": "2018",
+      "make": "Chevrolet",
+      "model": "Cruze",
+      "category": "SEDAN",
+      "price": "55",
+      "imageUrl": "images/cruze.jpeg",
+      "features": [
+        "Great on Gas",
+        "Easy to Park",
+        "Smooth & Reliable",
+        "Perfect for Daily Use"
+      ],
+      "available": true
+    }
+  ]
+}

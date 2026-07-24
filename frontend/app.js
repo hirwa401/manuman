@@ -4,9 +4,48 @@ const navLinks = document.getElementById('navLinks');
 navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
 navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
 
-// Set min date to today for date inputs
+// Set min date to today
 const today = new Date().toISOString().split('T')[0];
 document.querySelectorAll('input[type="date"]').forEach(input => input.setAttribute('min', today));
+
+// Load fleet from API
+async function loadFleet() {
+  try {
+    const res = await fetch('http://localhost:5000/api/fleet');
+    const fleet = await res.json();
+    const grid = document.getElementById('carsGrid');
+    const select = document.getElementById('vehicleSelect');
+    select.innerHTML = '<option value="">Select a car</option>';
+    grid.innerHTML = fleet.map((car, i) => `
+      <div class="car-card ${i === 1 ? 'featured' : ''}">
+        <div class="car-badge">${car.category}</div>
+        ${i === 1 ? '<div class="featured-tag">Most Popular</div>' : ''}
+        <img src="${car.imageUrl || 'images/fleet-card.png'}" alt="${car.year} ${car.make} ${car.model}" />
+        <div class="car-info">
+          <div class="car-title">
+            <span class="car-year">${car.year}</span>
+            <h3>${car.make} ${car.model}</h3>
+          </div>
+          <ul class="car-features">
+            ${(car.features || []).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+          </ul>
+          <div class="car-footer">
+            <div class="car-price">From <strong>$${car.price}</strong>/day</div>
+            <a href="#booking" class="btn-secondary">Book Now</a>
+          </div>
+        </div>
+      </div>`).join('');
+    fleet.forEach(car => {
+      const opt = document.createElement('option');
+      opt.value = car._id;
+      opt.textContent = `${car.year} ${car.make} ${car.model}`;
+      select.appendChild(opt);
+    });
+  } catch {
+    document.getElementById('carsGrid').innerHTML = '<p style="text-align:center;color:#888;padding:40px">Could not load fleet. Is the server running?</p>';
+  }
+}
+loadFleet();
 
 // Booking form
 document.getElementById('bookingForm').addEventListener('submit', async (e) => {
