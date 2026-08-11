@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
@@ -36,6 +37,24 @@ async function requireHost(req, res, next) {
 
 // ── HEALTH ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// ── STRIPE PAYMENT INTENT ─────────────────────────────────
+app.post('/api/create-payment-intent', async (req, res) => {
+  const { amount, customerEmail, customerName, description } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ message: 'Invalid amount.' });
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: 'usd',
+      receipt_email: customerEmail,
+      description: description || 'ManuMan Mobility Rental',
+      metadata: { customerName: customerName || '' }
+    });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // ── ADMIN AUTH ────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
