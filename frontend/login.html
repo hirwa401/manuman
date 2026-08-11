@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In – ManuMan Mobility</title>
+  <link rel="icon" type="image/jpeg" href="images/logo.jpeg" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --gold: #F5A800;
+      --gold-dark: #d4900a;
+      --dark-navy: #0d1b2a;
+      --white: #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: var(--dark-navy);
+    }
+
+    /* ── LEFT PANEL ── */
+    .auth-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=60') center/cover no-repeat;
+      opacity: 0.08;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(13,27,42,0.95) 0%, rgba(13,27,42,0.8) 100%);
+    }
+    .auth-left-content { position: relative; z-index: 1; }
+    .auth-left-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 64px;
+    }
+    .auth-left-logo img { height: 48px; border-radius: 8px; }
+    .auth-left-logo span { color: var(--white); font-size: 1.2rem; font-weight: 700; }
+    .auth-left h1 {
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      color: var(--white);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    .auth-left h1 span { color: var(--gold); }
+    .auth-left p {
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 380px;
+      margin-bottom: 48px;
+    }
+    .auth-perks { display: flex; flex-direction: column; gap: 16px; }
+    .auth-perk {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.92rem;
+    }
+    .auth-perk i {
+      width: 36px; height: 36px;
+      background: rgba(245,168,0,0.15);
+      border: 1px solid rgba(245,168,0,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* ── RIGHT PANEL ── */
+    .auth-right {
+      width: 480px;
+      flex-shrink: 0;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 52px;
+    }
+    .auth-right-header { margin-bottom: 36px; }
+    .auth-right-header h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--dark-navy);
+      margin-bottom: 8px;
+    }
+    .auth-right-header p { color: #888; font-size: 0.92rem; }
+
+    .auth-field { margin-bottom: 18px; }
+    .auth-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 7px;
+    }
+    .auth-field-wrap { position: relative; }
+    .auth-field-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #bbb;
+      font-size: 0.9rem;
+    }
+    .auth-field input {
+      width: 100%;
+      padding: 13px 14px 13px 40px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafafa;
+    }
+    .auth-field input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(245,168,0,0.1);
+      background: #fff;
+    }
+
+    .auth-forgot {
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 24px;
+    }
+    .auth-forgot a { font-size: 0.82rem; color: var(--gold); font-weight: 600; text-decoration: none; }
+    .auth-forgot a:hover { color: var(--gold-dark); }
+
+    .auth-error {
+      background: #fff0f0;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #c0392b;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+
+    .btn-auth {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      color: var(--dark-navy);
+      font-weight: 800;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-auth:hover { background: var(--gold-dark); transform: translateY(-1px); }
+    .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: #ccc;
+      font-size: 0.82rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e8e8e8;
+    }
+
+    .auth-switch {
+      text-align: center;
+      font-size: 0.88rem;
+      color: #888;
+      margin-top: 28px;
+    }
+    .auth-switch a { color: var(--gold); font-weight: 700; text-decoration: none; }
+    .auth-switch a:hover { color: var(--gold-dark); }
+
+    .back-home {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color 0.2s;
+      z-index: 10;
+    }
+    .back-home:hover { color: var(--gold); }
+
+    @media (max-width: 900px) {
+      .auth-left { display: none; }
+      .auth-right { width: 100%; padding: 48px 32px; }
+    }
+    @media (max-width: 480px) {
+      .auth-right { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> Back to Home</a>
+
+  <!-- LEFT -->
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="auth-left-logo">
+        <img src="images/logo.jpeg" alt="ManuMan Mobility" />
+        <span>ManuMan Mobility</span>
+      </div>
+      <h1>Welcome<br/>back to<br/><span>the road.</span></h1>
+      <p>Portland, Maine's most trusted car rental. Sign in to manage your bookings and hit the road.</p>
+      <div class="auth-perks">
+        <div class="auth-perk"><i class="fas fa-calendar-check"></i> View and manage your bookings</div>
+        <div class="auth-perk"><i class="fas fa-bolt"></i> Faster checkout on your next rental</div>
+        <div class="auth-perk"><i class="fas fa-star"></i> Exclusive member rates</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="auth-right">
+    <div class="auth-right-header">
+      <h2>Sign In</h2>
+      <p>Enter your credentials to access your account</p>
+    </div>
+
+    <div class="auth-error" id="loginError"></div>
+
+    <div class="auth-field">
+      <label>Email Address</label>
+      <div class="auth-field-wrap">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="loginEmail" placeholder="you@email.com" />
+      </div>
+    </div>
+
+    <div class="auth-field">
+      <label>Password</label>
+      <div class="auth-field-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="loginPassword" placeholder="••••••••" />
+      </div>
+    </div>
+
+    <div class="auth-forgot"><a href="#">Forgot password?</a></div>
+
+    <button class="btn-auth" id="loginBtn" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-switch">
+      Don't have an account? <a href="signup.html">Create one free</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script>
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // If already logged in, redirect home
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'index.html';
+    });
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+      errEl.classList.remove('show');
+
+      if (!email || !password) {
+        errEl.textContent = 'Please enter your email and password.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = error.message;
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>
