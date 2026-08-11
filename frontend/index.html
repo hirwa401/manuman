@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ManuMan Mobility – Reliable Cars. Exceptional Experiences.</title>
+  <link rel="icon" type="image/jpeg" href="images/logo.jpeg" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
@@ -22,6 +23,16 @@
         <li><a href="#why">Why Us</a></li>
         <li><a href="#contact">Contact</a></li>
         <li><a href="#booking" class="btn-nav">Book Now</a></li>
+        <li id="navAuthBtn"><a href="#" class="btn-nav btn-nav-outline" onclick="openAuthModal('login');return false;">Sign In</a></li>
+        <li id="navUserMenu" style="display:none" class="nav-user-menu">
+          <span id="navUserName"></span>
+          <div class="nav-user-dropdown">
+            <a href="#" onclick="openMyBookings();return false;"><i class="fas fa-calendar-check"></i> My Bookings</a>
+            <a href="host.html" id="navHostLink" style="display:none"><i class="fas fa-car"></i> Host Dashboard</a>
+            <a href="#" onclick="becomeHost();return false;" id="navBecomeHost"><i class="fas fa-plus-circle"></i> Become a Host</a>
+            <a href="#" onclick="signOut();return false;"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+          </div>
+        </li>
       </ul>
     </div>
   </nav>
@@ -78,6 +89,121 @@
     </div>
     <div class="cars-grid" id="carsGrid"><p style="text-align:center;color:#888;padding:40px">Loading fleet...</p></div>
   </section>
+
+  <!-- BOOKING MODAL -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="bmodal">
+      <button class="bmodal-close" onclick="closeBookingModal()"><i class="fas fa-times"></i></button>
+
+      <!-- STEP 1: Dates -->
+      <div class="bstep" id="bstep1">
+        <div class="bmodal-header">
+          <div class="bmodal-car-img" id="bCarImg"></div>
+          <div>
+            <div class="bmodal-car-badge" id="bCarBadge"></div>
+            <h3 id="bCarName"></h3>
+            <div class="bmodal-price" id="bCarPrice"></div>
+          </div>
+        </div>
+        <div class="bform-grid">
+          <div class="bform-group">
+            <label><i class="fas fa-map-marker-alt"></i> Pick-up Location</label>
+            <div class="pickup-toggle">
+              <button type="button" class="pickup-opt active" id="pickupHQ" onclick="setPickupHQ()"><i class="fas fa-building"></i> Headquarters <span class="pickup-free">Free</span></button>
+              <button type="button" class="pickup-opt" id="pickupCustom" onclick="setPickupCustom()"><i class="fas fa-map-marker-alt"></i> Custom Location <span class="pickup-fee">+$100</span></button>
+            </div>
+            <input type="text" id="bPickup" placeholder="Enter delivery address" oninput="updateSummary()" style="display:none;margin-top:8px" />
+          </div>
+        <div class="bform-group bform-full">
+            <label><i class="fas fa-calendar-alt"></i> Availability Calendar</label>
+            <div class="avail-calendar" id="availCalendar">
+              <div class="avail-cal-nav">
+                <button onclick="calPrev()" type="button"><i class="fas fa-chevron-left"></i></button>
+                <span id="calMonthLabel"></span>
+                <button onclick="calNext()" type="button"><i class="fas fa-chevron-right"></i></button>
+              </div>
+              <div class="avail-cal-grid">
+                <div class="cal-day-name">Su</div><div class="cal-day-name">Mo</div><div class="cal-day-name">Tu</div><div class="cal-day-name">We</div><div class="cal-day-name">Th</div><div class="cal-day-name">Fr</div><div class="cal-day-name">Sa</div>
+              </div>
+              <div class="avail-cal-days" id="calDays"></div>
+              <div class="avail-cal-legend">
+                <span><i class="leg-dot leg-avail"></i> Available</span>
+                <span><i class="leg-dot leg-booked"></i> Booked</span>
+                <span><i class="leg-dot leg-selected"></i> Selected</span>
+              </div>
+            </div>
+          </div>
+          <div class="bform-group">
+            <label><i class="fas fa-calendar-alt"></i> Pick-up Date</label>
+            <input type="date" id="bPickupDate" />
+          </div>
+          <div class="bform-group">
+            <label><i class="fas fa-calendar-check"></i> Return Date</label>
+            <input type="date" id="bReturnDate" />
+          </div>
+          <div class="bform-group">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" id="bName" placeholder="John Doe" />
+          </div>
+          <div class="bform-group">
+            <label><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" id="bEmail" placeholder="you@email.com" />
+          </div>
+          <div class="bform-group">
+            <label><i class="fas fa-phone"></i> Phone</label>
+            <input type="tel" id="bPhone" placeholder="207-000-0000" />
+          </div>
+        </div>
+        <div class="bmodal-summary" id="bSummary" style="display:none">
+          <div class="bsummary-row"><span>Duration</span><strong id="bDays"></strong></div>
+          <div class="bsummary-row"><span>Rate</span><strong id="bRate"></strong></div>
+          <div class="bsummary-row" id="bDeliveryRow" style="display:none"><span>🚗 Delivery Fee</span><strong style="color:#e65100">+$100</strong></div>
+          <div class="bsummary-row total"><span>Total</span><strong id="bTotal"></strong></div>
+        </div>
+        <div class="bmodal-error" id="bError"></div>
+        <button class="btn-primary bmodal-btn" onclick="goToPayment()">Continue to Payment <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- STEP 2: Payment -->
+      <div class="bstep" id="bstep2" style="display:none">
+        <h3 style="margin-bottom:6px">Payment Details</h3>
+        <p style="color:#888;font-size:0.88rem;margin-bottom:20px">Your total: <strong id="bTotalConfirm" style="color:#0d1b2a"></strong></p>
+        <div class="payment-methods">
+          <button class="pay-method active" id="payCard" onclick="selectPayMethod('card')"><i class="fas fa-credit-card"></i> Credit / Debit Card</button>
+          <button class="pay-method" id="payCash" onclick="selectPayMethod('cash')"><i class="fas fa-money-bill-wave"></i> Pay on Pickup</button>
+        </div>
+        <div id="cardFields">
+          <div class="bform-group" style="margin-top:16px">
+            <label>Card Details</label>
+            <div id="stripeCardElement" style="padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff"></div>
+            <div id="stripeCardError" style="color:#e74c3c;font-size:0.85rem;margin-top:6px"></div>
+          </div>
+          <div class="secure-note"><i class="fas fa-lock"></i> Payments are securely processed by Stripe. Card details are never stored.</div>
+        </div>
+        <div id="cashFields" style="display:none">
+          <div class="cash-info"><i class="fas fa-info-circle"></i> You will pay in cash when you pick up the vehicle. Your booking will be held as <strong>pending</strong> until confirmed by our team.</div>
+        </div>
+        <div class="bmodal-error" id="bPayError"></div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back</button>
+          <button class="btn-primary bmodal-btn" onclick="submitBooking()">Confirm Booking <i class="fas fa-check"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Success -->
+      <div class="bstep" id="bstep3" style="display:none">
+        <div class="booking-success">
+          <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+          <h3>Booking Confirmed!</h3>
+          <p>Thank you, <strong id="bSuccessName"></strong>! Your reservation has been received.</p>
+          <div class="success-details" id="bSuccessDetails"></div>
+          <p style="color:#888;font-size:0.85rem;margin-top:16px">A confirmation will be sent to <strong id="bSuccessEmail"></strong>.<br/>Questions? Call <a href="tel:2072450080">207-245-0080</a></p>
+          <button class="btn-primary bmodal-btn" onclick="closeBookingModal()" style="margin-top:20px">Done</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- HOW IT WORKS -->
   <section class="how-it-works" id="how">
@@ -160,6 +286,24 @@
     </div>
   </section>
 
+  <!-- RATING SECTION -->
+  <section class="rating-section" id="rate">
+    <form class="rating-form" id="ratingForm">
+      <span class="rating-label">Enjoyed your ride? Rate us</span>
+      <div class="star-picker" id="starPicker">
+        <i class="fas fa-star" data-val="1"></i>
+        <i class="fas fa-star" data-val="2"></i>
+        <i class="fas fa-star" data-val="3"></i>
+        <i class="fas fa-star" data-val="4"></i>
+        <i class="fas fa-star" data-val="5"></i>
+      </div>
+      <input type="hidden" id="ratingVal" value="0" />
+      <input type="text" id="ratingName" placeholder="Your name (optional)" />
+      <button type="submit" class="btn-rating">Submit</button>
+      <div class="form-msg" id="ratingMsg"></div>
+    </form>
+  </section>
+
   <!-- CONTACT -->
   <section class="contact" id="contact">
     <div class="section-header">
@@ -179,7 +323,7 @@
           <i class="fas fa-envelope"></i>
           <div>
             <strong>Email Us</strong>
-            <a href="mailto:Manumanmobility@gmail.com">Manumanmobility@gmail.com</a>
+            <a href="mailto:Manumanmobility1@gmail.com">Manumanmobility1@gmail.com</a>
           </div>
         </div>
         <div class="contact-item">
@@ -192,8 +336,8 @@
         <div class="contact-item">
           <i class="fas fa-globe"></i>
           <div>
-            <strong>Website</strong>
-            <a href="https://manumanmobility.com">manumanmobility.com</a>
+            <strong>email</strong>
+            <p>manumanmobility1@@gmail.com</p>
           </div>
         </div>
       </div>
@@ -228,7 +372,7 @@
       <div class="footer-contact">
         <h4>Contact</h4>
         <p><i class="fas fa-phone"></i> 207-245-0080</p>
-        <p><i class="fas fa-envelope"></i> Manumanmobility@gmail.com</p>
+        <p><i class="fas fa-envelope"></i> Manumanmobility1@gmail.com</p>
         <p><i class="fas fa-map-marker-alt"></i> Portland, Maine</p>
       </div>
     </div>
@@ -237,6 +381,54 @@
     </div>
   </footer>
 
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-modal">
+      <button class="bmodal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+      <div class="auth-logo"><img src="images/logo.jpeg" alt="logo" /></div>
+
+      <div id="authLogin">
+        <h3>Welcome Back</h3>
+        <p class="auth-sub">Sign in to your account</p>
+        <div class="bform-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@email.com" /></div>
+        <div class="bform-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" /></div>
+        <div class="auth-error" id="loginError"></div>
+        <button class="btn-primary bmodal-btn" onclick="doLogin()">Sign In</button>
+        <p class="auth-switch">No account? <a href="#" onclick="switchAuth('signup');return false;">Sign Up</a></p>
+      </div>
+
+      <div id="authSignup" style="display:none">
+        <h3>Create Account</h3>
+        <p class="auth-sub">Join ManuMan Mobility</p>
+        <div class="bform-group"><label>Full Name</label><input type="text" id="signupName" placeholder="John Doe" /></div>
+        <div class="bform-group"><label>Email</label><input type="email" id="signupEmail" placeholder="you@email.com" /></div>
+        <div class="bform-group"><label>Password</label><input type="password" id="signupPassword" placeholder="Min. 6 characters" /></div>
+        <div class="auth-error" id="signupError"></div>
+        <button class="btn-primary bmodal-btn" onclick="doSignup()">Create Account</button>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="switchAuth('login');return false;">Sign In</a></p>
+      </div>
+
+      <div id="authSuccess" style="display:none">
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <h3>Check your email!</h3>
+        <p class="auth-sub">We sent a confirmation link to your email. Click it to activate your account.</p>
+        <button class="btn-primary bmodal-btn" onclick="closeAuthModal()">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY BOOKINGS MODAL -->
+  <div class="modal-overlay" id="myBookingsModal">
+    <div class="auth-modal" style="max-width:640px">
+      <button class="bmodal-close" onclick="document.getElementById('myBookingsModal').style.display='none'"><i class="fas fa-times"></i></button>
+      <h3>My Bookings</h3>
+      <div id="myBookingsList" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

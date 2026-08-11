@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Host Dashboard – ManuMan Mobility</title>
+  <link rel="icon" type="image/jpeg" href="images/logo.jpeg"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; margin: 0; }
+    .host-nav { background: #0d1b2a; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+    .host-nav .logo { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .host-nav .logo img { height: 36px; border-radius: 6px; }
+    .host-nav a { color: #aaa; text-decoration: none; font-size: 0.9rem; }
+    .host-nav a:hover { color: #fff; }
+    .host-wrap { max-width: 1000px; margin: 36px auto; padding: 0 20px; }
+    .host-header { margin-bottom: 28px; }
+    .host-header h2 { font-size: 1.6rem; color: #0d1b2a; margin: 0 0 4px; }
+    .host-header p { color: #888; margin: 0; font-size: 0.9rem; }
+    .host-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .host-tab { padding: 9px 20px; border: 1.5px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 0.88rem; color: #555; }
+    .host-tab.active { background: #0d1b2a; color: #fff; border-color: #0d1b2a; }
+    .host-section { display: none; }
+    .host-section.active { display: block; }
+    .host-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .host-card h4 { margin: 0 0 16px; color: #0d1b2a; }
+    .hform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .hform-group { display: flex; flex-direction: column; gap: 5px; }
+    .hform-group label { font-size: 0.82rem; color: #666; font-weight: 600; }
+    .hform-group input, .hform-group select, .hform-group textarea { padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 0.88rem; font-family: inherit; outline: none; }
+    .hform-group input:focus, .hform-group select:focus { border-color: #F5A800; }
+    .hform-full { grid-column: 1 / -1; }
+    .btn-host { padding: 10px 22px; background: #F5A800; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+    .btn-host:hover { background: #d4900a; }
+    .btn-danger-sm { padding: 5px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
+    .host-car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .host-car-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .host-car-card img { width: 100%; height: 160px; object-fit: cover; }
+    .host-car-info { padding: 14px; }
+    .host-car-info h4 { margin: 0 0 4px; font-size: 0.95rem; color: #0d1b2a; }
+    .host-car-info p { margin: 0 0 10px; color: #888; font-size: 0.82rem; }
+    .host-car-actions { display: flex; gap: 8px; }
+    .pending-badge { background: #f39c12; color: #fff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; }
+    .approved-badge { background: #2ecc71; color: #fff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; }
+    .booking-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; }
+    .booking-row:last-child { border-bottom: none; }
+    .status-pending { color: #f39c12; font-weight: 600; }
+    .status-paid { color: #2ecc71; font-weight: 600; }
+    .status-cancelled { color: #e74c3c; font-weight: 600; }
+    .earnings-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .earn-card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .earn-card .earn-val { font-size: 1.8rem; font-weight: 700; color: #0d1b2a; }
+    .earn-card .earn-label { font-size: 0.8rem; color: #888; margin-top: 4px; }
+    .host-error { color: #e74c3c; font-size: 0.85rem; margin-top: 8px; }
+    .host-success { color: #2ecc71; font-size: 0.85rem; margin-top: 8px; }
+    #hostGate { text-align: center; padding: 80px 20px; }
+    #hostGate h2 { color: #0d1b2a; }
+    #hostGate p { color: #888; margin-bottom: 24px; }
+    @media(max-width:600px) { .hform-grid { grid-template-columns: 1fr; } .earnings-box { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="host-nav">
+  <div class="logo"><img src="images/logo.jpeg" alt="logo"/> Host Dashboard</div>
+  <div style="display:flex;gap:20px;align-items:center">
+    <span style="color:#aaa;font-size:0.88rem" id="hostUserName"></span>
+    <a href="index.html"><i class="fas fa-home"></i> Main Site</a>
+    <a href="#" onclick="hostSignOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+  </div>
+</nav>
+
+<!-- NOT LOGGED IN / NOT HOST -->
+<div id="hostGate" style="display:none">
+  <h2>Host Access Required</h2>
+  <p>You need to be signed in and have host privileges to access this dashboard.</p>
+  <a href="index.html" class="btn-host">Go to Main Site</a>
+</div>
+
+<!-- DASHBOARD -->
+<div class="host-wrap" id="hostDash" style="display:none">
+  <div class="host-header">
+    <h2>Welcome, <span id="hostName"></span> 👋</h2>
+    <p>Manage your listings and track your bookings</p>
+  </div>
+
+  <div class="earnings-box">
+    <div class="earn-card"><div class="earn-val" id="earnTotal">$0</div><div class="earn-label">Total Earnings</div></div>
+    <div class="earn-card"><div class="earn-val" id="earnBookings">0</div><div class="earn-label">Total Bookings</div></div>
+    <div class="earn-card"><div class="earn-val" id="earnCars">0</div><div class="earn-label">Listed Cars</div></div>
+  </div>
+
+  <div class="host-tabs">
+    <button class="host-tab active" onclick="showHostTab('listings')"><i class="fas fa-car"></i> My Listings</button>
+    <button class="host-tab" onclick="showHostTab('add')"><i class="fas fa-plus"></i> Add Car</button>
+    <button class="host-tab" onclick="showHostTab('bookings')"><i class="fas fa-calendar-check"></i> Bookings</button>
+  </div>
+
+  <!-- MY LISTINGS -->
+  <div class="host-section active" id="hostListings">
+    <div id="hostCarGrid" class="host-car-grid"><p style="color:#888">Loading...</p></div>
+  </div>
+
+  <!-- ADD CAR -->
+  <div class="host-section" id="hostAdd">
+    <div class="host-card">
+      <h4><i class="fas fa-plus-circle"></i> List a New Car</h4>
+      <div class="hform-grid">
+        <div class="hform-group"><label>Year</label><input type="text" id="hYear" placeholder="2022"/></div>
+        <div class="hform-group"><label>Make</label><input type="text" id="hMake" placeholder="Toyota"/></div>
+        <div class="hform-group"><label>Model</label><input type="text" id="hModel" placeholder="Camry"/></div>
+        <div class="hform-group"><label>Category</label>
+          <select id="hCategory">
+            <option value="SEDAN">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="MINIVAN">Minivan</option>
+            <option value="TRUCK">Truck</option>
+            <option value="LUXURY">Luxury</option>
+          </select>
+        </div>
+        <div class="hform-group"><label>Price per Day ($)</label><input type="number" id="hPrice" placeholder="65"/></div>
+        <div class="hform-group"><label>Image URL</label><input type="text" id="hImageUrl" placeholder="https://..."/></div>
+        <div class="hform-group hform-full"><label>Features (comma separated)</label><input type="text" id="hFeatures" placeholder="Bluetooth, Backup Camera, GPS"/></div>
+      </div>
+      <div id="hAddError" class="host-error"></div>
+      <div id="hAddSuccess" class="host-success"></div>
+      <button class="btn-host" style="margin-top:16px" onclick="addHostCar()"><i class="fas fa-plus"></i> Submit for Approval</button>
+      <p style="color:#888;font-size:0.8rem;margin-top:8px">Your car will be reviewed by ManuMan Mobility before going live.</p>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="host-section" id="hostBookings">
+    <div class="host-card">
+      <h4><i class="fas fa-calendar-check"></i> Bookings on Your Cars</h4>
+      <div id="hostBookingsList"><p style="color:#888">Loading...</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+  let sb, hostUser, hostToken;
+
+  async function init() {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { showGate(); return; }
+    hostUser = session.user;
+    hostToken = session.access_token;
+
+    const res = await fetch(`${API}/profile`, { headers: { Authorization: `Bearer ${hostToken}` } });
+    const profile = await res.json();
+    if (!['host','admin'].includes(profile.role)) { showGate(); return; }
+
+    document.getElementById('hostGate').style.display = 'none';
+    document.getElementById('hostDash').style.display = 'block';
+    const name = profile.full_name || hostUser.email.split('@')[0];
+    document.getElementById('hostName').textContent = name;
+    document.getElementById('hostUserName').textContent = name;
+
+    loadHostCars();
+    loadHostBookings();
+  }
+
+  function showGate() {
+    document.getElementById('hostGate').style.display = 'block';
+    document.getElementById('hostDash').style.display = 'none';
+  }
+
+  function showHostTab(tab) {
+    document.querySelectorAll('.host-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.host-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('host' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  async function loadHostCars() {
+    const res = await fetch(`${API}/host/fleet`, { headers: { Authorization: `Bearer ${hostToken}` } });
+    const cars = await res.json();
+    document.getElementById('earnCars').textContent = cars.length;
+    const grid = document.getElementById('hostCarGrid');
+    if (!cars.length) { grid.innerHTML = '<p style="color:#888">No cars listed yet. Add your first car!</p>'; return; }
+    grid.innerHTML = cars.map(c => `
+      <div class="host-car-card">
+        <img src="${c.image_url || 'images/fleet-card.png'}" onerror="this.src='images/fleet-card.png'" />
+        <div class="host-car-info">
+          <h4>${c.year} ${c.make} ${c.model}</h4>
+          <p>$${c.price}/day · ${c.category}</p>
+          <div style="margin-bottom:10px">
+            ${c.approved ? '<span class="approved-badge">✓ Approved</span>' : '<span class="pending-badge">⏳ Pending Approval</span>'}
+          </div>
+          <div class="host-car-actions">
+            <button class="btn-danger-sm" onclick="deleteHostCar('${c.id}')"><i class="fas fa-trash"></i> Remove</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function loadHostBookings() {
+    const res = await fetch(`${API}/host/bookings`, { headers: { Authorization: `Bearer ${hostToken}` } });
+    const bookings = await res.json();
+    document.getElementById('earnBookings').textContent = bookings.length;
+    const total = bookings.reduce((s, b) => s + Number(b.total_amount || 0), 0);
+    document.getElementById('earnTotal').textContent = `$${total}`;
+    const list = document.getElementById('hostBookingsList');
+    if (!bookings.length) { list.innerHTML = '<p style="color:#888">No bookings yet.</p>'; return; }
+    list.innerHTML = bookings.map(b => `
+      <div class="booking-row">
+        <div>
+          <strong>${b.vehicle_name}</strong><br/>
+          <span style="color:#888;font-size:0.8rem">${b.customer_name} · ${b.pickup_date} → ${b.return_date}</span>
+        </div>
+        <div style="text-align:right">
+          <div class="status-${b.status}">${b.status}</div>
+          <div style="font-weight:700">$${b.total_amount}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function addHostCar() {
+    const err = document.getElementById('hAddError');
+    const suc = document.getElementById('hAddSuccess');
+    err.textContent = ''; suc.textContent = '';
+    const year = document.getElementById('hYear').value.trim();
+    const make = document.getElementById('hMake').value.trim();
+    const model = document.getElementById('hModel').value.trim();
+    const category = document.getElementById('hCategory').value;
+    const price = document.getElementById('hPrice').value;
+    const image_url = document.getElementById('hImageUrl').value.trim();
+    const featStr = document.getElementById('hFeatures').value.trim();
+    const features = featStr ? featStr.split(',').map(f => f.trim()) : [];
+    if (!year || !make || !model || !price) { err.textContent = 'Please fill all required fields.'; return; }
+    const res = await fetch(`${API}/host/fleet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${hostToken}` },
+      body: JSON.stringify({ year, make, model, category, price, image_url, features })
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.message; return; }
+    suc.textContent = '✅ Car submitted! It will appear after admin approval.';
+    ['hYear','hMake','hModel','hPrice','hImageUrl','hFeatures'].forEach(id => document.getElementById(id).value = '');
+    loadHostCars();
+  }
+
+  async function deleteHostCar(id) {
+    if (!confirm('Remove this car from your listings?')) return;
+    await fetch(`${API}/host/fleet/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${hostToken}` } });
+    loadHostCars();
+  }
+
+  async function hostSignOut() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  init();
+</script>
+</body>
+</html>

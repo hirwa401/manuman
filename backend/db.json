@@ -58,6 +58,21 @@
         "Perfect for Daily Use"
       ],
       "available": true
+    },
+    {
+      "_id": "f79bdf44-96ca-4249-a2bf-9752e1c99335",
+      "year": "2022",
+      "make": "toyota",
+      "model": "suv",
+      "category": "TRUCK",
+      "price": 70,
+      "imageUrl": "",
+      "features": [
+        "fuel efficient",
+        "4 wheel drive",
+        "long lasting fuel"
+      ],
+      "available": true
     }
   ]
 }

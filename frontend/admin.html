@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin – ManuMan Mobility</title>
+  <link rel="icon" type="image/jpeg" href="images/logo.jpeg" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     :root {
@@ -347,6 +348,8 @@
       <a onclick="showSection('bookings')"><i class="fas fa-calendar-check"></i> Bookings</a>
       <a onclick="showSection('contacts')"><i class="fas fa-envelope"></i> Messages</a>
       <a onclick="showSection('fleet')"><i class="fas fa-car"></i> Fleet</a>
+      <a onclick="showSection('ratings')"><i class="fas fa-star"></i> Ratings</a>
+      <a onclick="showSection('hosts')"><i class="fas fa-users"></i> Host Approvals</a>
       <a href="index.html" target="_blank"><i class="fas fa-globe"></i> View Website</a>
     </nav>
     <div class="sidebar-footer">
@@ -408,12 +411,13 @@
             <thead>
               <tr>
                 <th>#</th>
+                <th>Customer</th>
                 <th>Vehicle</th>
-                <th>Pick-up Location</th>
-                <th>Pick-up Date</th>
-                <th>Return Date</th>
+                <th>Pick-up</th>
+                <th>Dates</th>
+                <th>Payment</th>
+                <th>Total</th>
                 <th>Status</th>
-                <th>Received</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -446,6 +450,32 @@
             <tbody id="contactsBody"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- RATINGS -->
+    <div class="section" id="section-ratings">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Customer Ratings</h3>
+          <button class="refresh-btn" onclick="loadRatings()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Name</th><th>Rating</th><th>Comment</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="ratingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="section-hosts">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Pending Host Car Listings</h3>
+          <button class="refresh-btn" onclick="loadPendingCars()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div id="pendingCarsList" style="padding:16px"><p style="color:#888">Click refresh to load.</p></div>
       </div>
     </div>
 
@@ -485,8 +515,12 @@
     </select>
     <label>Price per Day ($)</label>
     <input type="number" id="carPrice" placeholder="e.g. 65" min="1" />
-    <label>Image URL</label>
-    <input type="text" id="carImage" placeholder="https://... or leave blank" />
+    <label>Car Image</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <input type="file" id="carImageFile" accept="image/*" onchange="previewImage(this)" style="border:1.5px solid #ddd;border-radius:6px;padding:8px;font-size:0.88rem"/>
+      <img id="carImagePreview" src="" style="display:none;width:100%;height:140px;object-fit:cover;border-radius:6px;border:1px solid #eee"/>
+      <input type="text" id="carImage" placeholder="Or paste an image URL" />
+    </div>
     <label>Features (one per line)</label>
     <textarea id="carFeatures" rows="4" placeholder="Fuel Efficient&#10;All-Wheel Drive&#10;Spacious Interior"></textarea>
     <div class="modal-actions">
@@ -497,7 +531,30 @@
 </div>
 
 <script>
-  const API = 'http://localhost:5000/api';
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api'
+    : 'https://manuman-api.vercel.app/api';
+
+  function previewImage(input) {
+    const preview = document.getElementById('carImagePreview');
+    if (input.files && input.files[0]) {
+      preview.src = URL.createObjectURL(input.files[0]);
+      preview.style.display = 'block';
+      document.getElementById('carImage').value = '';
+    }
+  }
+
+  async function uploadImage(file) {
+    const res = await fetch(`${API}/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const data = await res.json();
+    return data.url;
+  }
+
   let allBookings = [], allContacts = [];
 
   // ── AUTH ──────────────────────────────────────────────────
@@ -516,7 +573,6 @@
         sessionStorage.setItem('adminAuth', 'true');
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('menuToggle').style.display = '';
         loadAll();
       } else {
         err.textContent = '❌ Wrong password. Try again.';
@@ -539,7 +595,7 @@
   }
 
   // ── NAVIGATION ────────────────────────────────────────────
-  const titles = { overview: 'Overview', bookings: 'Bookings', contacts: 'Messages', fleet: 'Fleet Management' };
+  const titles = { overview: 'Overview', bookings: 'Bookings', contacts: 'Messages', fleet: 'Fleet Management', ratings: 'Customer Ratings' };
 
   function showSection(name) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -550,6 +606,8 @@
     if (name === 'bookings') loadBookings();
     if (name === 'contacts') loadContacts();
     if (name === 'fleet') loadFleet();
+    if (name === 'ratings') loadRatings();
+    if (name === 'hosts') loadPendingCars();
     closeSidebar();
   }
 
@@ -582,15 +640,15 @@
     if (!allFleet.length) { grid.innerHTML = '<p style="color:#aaa;padding:20px">No cars in fleet yet. Click "Add Car" to get started.</p>'; return; }
     grid.innerHTML = allFleet.map(car => `
       <div class="fleet-card">
-        <img src="${car.imageUrl || 'images/fleet-card.png'}" alt="${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'"/>
+        <img src="${car.image_url || 'images/fleet-card.png'}" alt="${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'"/>
         <div class="fleet-card-body">
           <span class="cat">${car.category}</span>
           <h3>${car.year} ${car.make} ${car.model}</h3>
           <div class="price">$${car.price}/day</div>
         </div>
         <div class="fleet-card-actions">
-          <button class="action-btn btn-confirm" onclick="openModal('${car._id}')"><i class="fas fa-edit"></i> Edit</button>
-          <button class="action-btn btn-delete" onclick="deleteCar('${car._id}')"><i class="fas fa-trash"></i> Remove</button>
+          <button class="action-btn btn-confirm" onclick="openModal('${car.id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="action-btn btn-delete" onclick="deleteCar('${car.id}')"><i class="fas fa-trash"></i> Remove</button>
         </div>
       </div>`).join('');
   }
@@ -603,19 +661,25 @@
     document.getElementById('carCategory').value = 'SEDAN';
     document.getElementById('carPrice').value = '';
     document.getElementById('carImage').value = '';
+    document.getElementById('carImageFile').value = '';
+    document.getElementById('carImagePreview').style.display = 'none';
     document.getElementById('carFeatures').value = '';
     document.getElementById('modalTitle').textContent = 'Add New Car';
     if (id) {
-      const car = allFleet.find(c => c._id === id);
+      const car = allFleet.find(c => c.id === id);
       if (!car) return;
       document.getElementById('modalTitle').textContent = 'Edit Car';
-      document.getElementById('editCarId').value = car._id;
+      document.getElementById('editCarId').value = car.id;
       document.getElementById('carYear').value = car.year;
       document.getElementById('carMake').value = car.make;
       document.getElementById('carModel').value = car.model;
       document.getElementById('carCategory').value = car.category;
       document.getElementById('carPrice').value = car.price;
-      document.getElementById('carImage').value = car.imageUrl || '';
+      document.getElementById('carImage').value = car.image_url || '';
+      if (car.image_url) {
+        document.getElementById('carImagePreview').src = car.image_url;
+        document.getElementById('carImagePreview').style.display = 'block';
+      }
       document.getElementById('carFeatures').value = (car.features || []).join('\n');
     }
     document.getElementById('modalOverlay').classList.add('open');
@@ -625,13 +689,20 @@
 
   async function saveCar() {
     const id = document.getElementById('editCarId').value;
+    const fileInput = document.getElementById('carImageFile');
+    let image_url = document.getElementById('carImage').value.trim();
+    if (fileInput.files && fileInput.files[0]) {
+      try {
+        image_url = await uploadImage(fileInput.files[0]);
+      } catch { alert('Image upload failed. Try a URL instead.'); return; }
+    }
     const payload = {
       year: document.getElementById('carYear').value.trim(),
       make: document.getElementById('carMake').value.trim(),
       model: document.getElementById('carModel').value.trim(),
       category: document.getElementById('carCategory').value,
       price: document.getElementById('carPrice').value,
-      imageUrl: document.getElementById('carImage').value.trim(),
+      image_url,
       features: document.getElementById('carFeatures').value.split('\n').map(f => f.trim()).filter(Boolean)
     };
     if (!payload.year || !payload.make || !payload.model || !payload.price) {
@@ -674,16 +745,17 @@
     tbody.innerHTML = allBookings.map((b, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td><strong>${vehicleLabel(b.vehicle)}</strong></td>
+        <td><strong>${b.customer_name || '—'}</strong><br/><small style="color:#888">${b.customer_email || ''}</small></td>
+        <td><strong>${b.vehicle_name || vehicleLabel(b.vehicle)}</strong></td>
         <td>${b.pickup}</td>
-        <td>${formatDate(b.pickupDate)}</td>
-        <td>${formatDate(b.returnDate)}</td>
+        <td>${formatDate(b.pickup_date)} → ${formatDate(b.return_date)}</td>
+        <td><i class="fas fa-${b.payment_method === 'card' ? 'credit-card' : 'money-bill-wave'}" style="color:var(--gold)"></i> ${b.payment_method === 'card' ? 'Card' : 'Cash'}</td>
+        <td><strong>$${b.total_amount || '—'}</strong></td>
         <td><span class="badge badge-${b.status}">${b.status}</span></td>
-        <td>${timeAgo(b.createdAt)}</td>
         <td>
-          ${b.status !== 'confirmed' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b._id}','confirmed')"><i class="fas fa-check"></i> Confirm</button>` : ''}
-          ${b.status !== 'cancelled' ? `<button class="action-btn btn-cancel" onclick="updateStatus('${b._id}','cancelled')"><i class="fas fa-times"></i> Cancel</button>` : ''}
-          <button class="action-btn btn-delete" onclick="deleteBooking('${b._id}')"><i class="fas fa-trash"></i></button>
+          ${b.status !== 'confirmed' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b.id}','confirmed')"><i class="fas fa-check"></i> Confirm</button>` : ''}
+          ${b.status !== 'cancelled' ? `<button class="action-btn btn-cancel" onclick="updateStatus('${b.id}','cancelled')"><i class="fas fa-times"></i> Cancel</button>` : ''}
+          <button class="action-btn btn-delete" onclick="deleteBooking('${b.id}')"><i class="fas fa-trash"></i></button>
         </td>
       </tr>`).join('');
   }
@@ -694,9 +766,9 @@
     if (!recent.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No bookings yet.</td></tr>`; return; }
     tbody.innerHTML = recent.map(b => `
       <tr>
-        <td><strong>${vehicleLabel(b.vehicle)}</strong></td>
+        <td><strong>${b.vehicle_name || vehicleLabel(b.vehicle_id)}</strong></td>
         <td>${b.pickup}</td>
-        <td>${formatDate(b.pickupDate)} → ${formatDate(b.returnDate)}</td>
+        <td>${formatDate(b.pickup_date)} → ${formatDate(b.return_date)}</td>
         <td><span class="badge badge-${b.status}">${b.status}</span></td>
       </tr>`).join('');
   }
@@ -740,8 +812,8 @@
         <td><a href="mailto:${c.email}">${c.email}</a></td>
         <td>${c.phone || '—'}</td>
         <td style="max-width:260px;white-space:normal">${c.message}</td>
-        <td>${timeAgo(c.createdAt)}</td>
-        <td><button class="action-btn btn-delete" onclick="deleteContact('${c._id}')"><i class="fas fa-trash"></i></button></td>
+        <td>${timeAgo(c.created_at)}</td>
+        <td><button class="action-btn btn-delete" onclick="deleteContact('${c.id}')"><i class="fas fa-trash"></i></button></td>
       </tr>`).join('');
   }
 
@@ -751,6 +823,58 @@
       await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
       loadContacts();
     } catch { alert('Error deleting message.'); }
+  }
+
+  // ── RATINGS ──────────────────────────────────────────────
+  let allRatings = [];
+  async function loadRatings() {
+    try {
+      const res = await fetch(`${API}/ratings`);
+      allRatings = await res.json();
+      const tbody = document.getElementById('ratingsBody');
+      if (!allRatings.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No ratings yet.</td></tr>`; return; }
+      tbody.innerHTML = allRatings.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${r.name || 'Anonymous'}</strong></td>
+          <td>${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</td>
+          <td style="max-width:260px;white-space:normal">${r.comment || '—'}</td>
+          <td>${timeAgo(r.created_at)}</td>
+          <td><button class="action-btn btn-delete" onclick="deleteRating('${r.id}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('');
+    } catch { renderError('ratingsBody', 6); }
+  }
+  async function deleteRating(id) {
+    if (!confirm('Delete this rating?')) return;
+    try {
+      await fetch(`${API}/ratings/${id}`, { method: 'DELETE' });
+      loadRatings();
+    } catch { alert('Error deleting rating.'); }
+  }
+
+  async function loadPendingCars() {
+    try {
+      const res = await fetch(`${API}/fleet?all=1`);
+      // fetch all including unapproved via admin — use service key workaround via direct supabase not available here
+      // Instead fetch all fleet (approved only) and pending separately
+      const r2 = await fetch(`${API}/fleet/pending`);
+      const cars = r2.ok ? await r2.json() : [];
+      const el = document.getElementById('pendingCarsList');
+      if (!cars.length) { el.innerHTML = '<p style="color:#888">No pending listings.</p>'; return; }
+      el.innerHTML = cars.map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0">
+          <div>
+            <strong>${c.year} ${c.make} ${c.model}</strong> — $${c.price}/day<br/>
+            <span style="color:#888;font-size:0.82rem">${c.category}</span>
+          </div>
+          <button class="action-btn" style="background:#2ecc71;color:#fff" onclick="approveCar('${c.id}')"><i class="fas fa-check"></i> Approve</button>
+        </div>`).join('');
+    } catch { document.getElementById('pendingCarsList').innerHTML = '<p style="color:#e74c3c">Error loading.</p>'; }
+  }
+
+  async function approveCar(id) {
+    await fetch(`${API}/fleet/${id}/approve`, { method: 'PATCH' });
+    loadPendingCars();
   }
 
   // ── STATS ─────────────────────────────────────────────────
