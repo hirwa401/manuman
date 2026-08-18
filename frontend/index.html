@@ -228,6 +228,16 @@
 
     </div>
   </div>
+  <!-- GALLERY MODAL -->
+  <div class="modal-overlay" id="galleryModal">
+    <div class="bmodal" id="galleryContent" style="max-width:820px;">
+      <button class="bmodal-close" onclick="closeGalleryModal()"><i class="fas fa-times"></i></button>
+      <div id="galleryMain" style="text-align:center">
+        <img id="galleryImg" src="" alt="" style="max-width:100%;max-height:480px;object-fit:contain;border-radius:8px;border:1px solid #eee" />
+      </div>
+      <div id="galleryThumbs" style="display:flex;gap:8px;margin-top:12px;overflow-x:auto;padding-top:8px"></div>
+    </div>
+  </div>
 
   <!-- HOW IT WORKS -->
   <section class="how-it-works" id="how">

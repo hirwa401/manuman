@@ -521,6 +521,13 @@
       <img id="carImagePreview" src="" style="display:none;width:100%;height:140px;object-fit:cover;border-radius:6px;border:1px solid #eee"/>
       <input type="text" id="carImage" placeholder="Or paste an image URL" />
     </div>
+    <label>Interior / Gallery Images</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <input type="file" id="carGalleryFiles" accept="image/*" multiple onchange="previewGallery(this)" style="border:1.5px solid #ddd;border-radius:6px;padding:8px;font-size:0.88rem"/>
+      <div id="existingGallery" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <div id="newGalleryPreview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <small style="color:#666">You can upload multiple images from your device. Remove any image by clicking the × on its thumbnail.</small>
+    </div>
     <label>Features (one per line)</label>
     <textarea id="carFeatures" rows="4" placeholder="Fuel Efficient&#10;All-Wheel Drive&#10;Spacious Interior"></textarea>
     <div class="modal-actions">
@@ -681,8 +688,44 @@
         document.getElementById('carImagePreview').style.display = 'block';
       }
       document.getElementById('carFeatures').value = (car.features || []).join('\n');
+      // populate existing gallery
+      window.editGallery = car.gallery ? [...car.gallery] : [];
+      renderExistingGallery();
     }
     document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function renderExistingGallery() {
+    const container = document.getElementById('existingGallery');
+    container.innerHTML = '';
+    if (!window.editGallery || !window.editGallery.length) return;
+    window.editGallery.forEach((url, idx) => {
+      const wrap = document.createElement('div');
+      wrap.style.position = 'relative';
+      wrap.style.width = '86px';
+      wrap.style.height = '66px';
+      wrap.style.borderRadius = '6px';
+      wrap.style.overflow = 'hidden';
+      wrap.style.border = '1px solid #eee';
+      const img = document.createElement('img'); img.src = url; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+      const btn = document.createElement('button'); btn.textContent = '×'; btn.style.position='absolute'; btn.style.top='4px'; btn.style.right='4px'; btn.style.background='rgba(0,0,0,0.6)'; btn.style.color='#fff'; btn.style.border='none'; btn.style.borderRadius='50%'; btn.style.width='22px'; btn.style.height='22px'; btn.style.cursor='pointer';
+      btn.onclick = () => { window.editGallery.splice(idx,1); renderExistingGallery(); };
+      wrap.appendChild(img); wrap.appendChild(btn); container.appendChild(wrap);
+    });
+  }
+
+  function previewGallery(input) {
+    const out = document.getElementById('newGalleryPreview');
+    out.innerHTML = '';
+    if (!input.files) return;
+    for (let i = 0; i < input.files.length; i++) {
+      const file = input.files[i];
+      const url = URL.createObjectURL(file);
+      const wrap = document.createElement('div');
+      wrap.style.width = '86px'; wrap.style.height = '66px'; wrap.style.overflow='hidden'; wrap.style.border='1px solid #eee'; wrap.style.borderRadius='6px';
+      const img = document.createElement('img'); img.src = url; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+      wrap.appendChild(img); out.appendChild(wrap);
+    }
   }
 
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -690,11 +733,27 @@
   async function saveCar() {
     const id = document.getElementById('editCarId').value;
     const fileInput = document.getElementById('carImageFile');
+    const galleryInput = document.getElementById('carGalleryFiles');
     let image_url = document.getElementById('carImage').value.trim();
     if (fileInput.files && fileInput.files[0]) {
       try {
         image_url = await uploadImage(fileInput.files[0]);
       } catch { alert('Image upload failed. Try a URL instead.'); return; }
+    }
+    // handle gallery uploads and existing gallery edits
+    const images = [];
+    // start with any existing gallery images that were not removed
+    if (window.editGallery && Array.isArray(window.editGallery)) images.push(...window.editGallery);
+    // upload any newly selected files
+    if (galleryInput && galleryInput.files && galleryInput.files.length) {
+      for (let i = 0; i < galleryInput.files.length; i++) {
+        try {
+          const url = await uploadImage(galleryInput.files[i]);
+          images.push(url);
+        } catch {
+          alert('One of the gallery uploads failed. Please retry.'); return;
+        }
+      }
     }
     const payload = {
       year: document.getElementById('carYear').value.trim(),
@@ -703,6 +762,7 @@
       category: document.getElementById('carCategory').value,
       price: document.getElementById('carPrice').value,
       image_url,
+      gallery: images,
       features: document.getElementById('carFeatures').value.split('\n').map(f => f.trim()).filter(Boolean)
     };
     if (!payload.year || !payload.make || !payload.model || !payload.price) {

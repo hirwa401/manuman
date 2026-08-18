@@ -19,6 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+  // GALLERY MODAL
+  let galleryImages = [];
+  let galleryIndex = 0;
+  function openGallery(car) {
+    galleryImages = [];
+    if (car.image_url) galleryImages.push(car.image_url);
+    if (car.gallery && Array.isArray(car.gallery)) galleryImages.push(...car.gallery);
+    // dedupe
+    galleryImages = [...new Set(galleryImages)];
+    if (!galleryImages.length) { alert('No interior images available for this car.'); return; }
+    galleryIndex = 0;
+    document.getElementById('galleryImg').src = galleryImages[galleryIndex];
+    const thumbs = document.getElementById('galleryThumbs'); thumbs.innerHTML = '';
+    galleryImages.forEach((src, i) => {
+      const t = document.createElement('img');
+      t.src = src; t.style.width = '96px'; t.style.height = '64px'; t.style.objectFit='cover'; t.style.cursor='pointer'; t.style.borderRadius='6px';
+      t.onclick = () => { galleryIndex = i; document.getElementById('galleryImg').src = galleryImages[galleryIndex]; };
+      thumbs.appendChild(t);
+    });
+    document.getElementById('galleryModal').classList.add('open');
+  }
+  function closeGalleryModal() { document.getElementById('galleryModal').classList.remove('open'); }
+
 function updateNavAuth() {
   const authBtn = document.getElementById('navAuthBtn');
   const userMenu = document.getElementById('navUserMenu');
@@ -323,7 +346,7 @@ function calNext() {
 }
 
 // Close on overlay click
-document.getElementById('bookingModal').addEventListener('click', e => {
+      grid.innerHTML = fleet.map((car, i) => `
   if (e.target === e.currentTarget) closeBookingModal();
 });
 
