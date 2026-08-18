@@ -7,6 +7,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
+app.use(express.raw({ type: 'image/*' }));
 app.use(express.json());
 
 const supabase = createClient(
@@ -65,20 +66,34 @@ app.post('/api/admin/login', (req, res) => {
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────
 app.post('/api/upload', async (req, res) => {
-  const chunks = [];
-  req.on('data', chunk => chunks.push(chunk));
-  req.on('end', async () => {
-    try {
-      const buffer = Buffer.concat(chunks);
-      const contentType = req.headers['content-type'] || 'image/jpeg';
-      const ext = contentType.split('/')[1].split(';')[0];
+  try {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.startsWith('application/json')) {
+      const { image, contentType: ct } = req.body;
+      if (!image) return res.status(400).json({ message: 'No image provided.' });
+      const buffer = Buffer.from(image, 'base64');
+      const ext = (ct || 'image/jpeg').split('/')[1]?.split(';')[0] || 'jpeg';
       const filename = `car-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('car-images').upload(filename, buffer, { contentType, upsert: true });
+      const { error } = await supabase.storage.from('car-images').upload(filename, buffer, { contentType: ct || 'image/jpeg', upsert: true });
       if (error) return res.status(500).json({ message: error.message });
       const { data } = supabase.storage.from('car-images').getPublicUrl(filename);
       res.json({ url: data.publicUrl });
-    } catch (e) { res.status(500).json({ message: e.message }); }
-  });
+    } else {
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', async () => {
+        try {
+          const buffer = Buffer.concat(chunks);
+          const ext = contentType.split('/')[1]?.split(';')[0] || 'jpeg';
+          const filename = `car-${Date.now()}.${ext}`;
+          const { error } = await supabase.storage.from('car-images').upload(filename, buffer, { contentType, upsert: true });
+          if (error) return res.status(500).json({ message: error.message });
+          const { data } = supabase.storage.from('car-images').getPublicUrl(filename);
+          res.json({ url: data.publicUrl });
+        } catch (e) { res.status(500).json({ message: e.message }); }
+      });
+    }
+  } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
 // ── USER PROFILE ──────────────────────────────────────────
@@ -120,17 +135,17 @@ app.get('/api/fleet/pending', async (req, res) => {
 });
 
 app.post('/api/fleet', async (req, res) => {
-  const { year, make, model, category, price, image_url, features } = req.body;
+  const { year, make, model, category, price, image_url, features, interior_images } = req.body;
   if (!year || !make || !model || !category || !price)
     return res.status(400).json({ message: 'year, make, model, category and price are required.' });
-  const { data, error } = await supabase.from('fleet').insert([{ year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], available: true, approved: true }]).select().single();
+  const { data, error } = await supabase.from('fleet').insert([{ year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true, approved: true }]).select().single();
   if (error) return res.status(500).json({ message: error.message });
   res.status(201).json(data);
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
-  const { year, make, model, category, price, image_url, features, available } = req.body;
-  const { data, error } = await supabase.from('fleet').update({ year, make, model, category, price: Number(price), image_url, features, available }).eq('id', req.params.id).select().single();
+  const { year, make, model, category, price, image_url, features, available, interior_images } = req.body;
+  const { data, error } = await supabase.from('fleet').update({ year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] }).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
