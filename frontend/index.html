@@ -188,9 +188,12 @@
         <h3 style="margin-bottom:6px">Continue to Payment</h3>
         <p style="color:#888;font-size:0.88rem;margin-bottom:20px">For secure payments, we'll move you to the checkout page.</p>
         <div class="bmodal-error" id="bPayError"></div>
-        <div style="display:flex;gap:10px;margin-top:20px">
-          <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back</button>
-          <button class="btn-primary bmodal-btn" id="continueToPaymentBtn">Continue to Payment <i class="fas fa-external-link-alt"></i></button>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;align-items:stretch">
+          <div style="display:flex;gap:10px">
+            <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-primary bmodal-btn" id="continueToPaymentBtn"><i class="fas fa-lock"></i> Continue to Payment</button>
+          </div>
+          <div class="secure-note" style="display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-shield-alt"></i> Secure payment processed by Stripe.</div>
         </div>
       </div>
 

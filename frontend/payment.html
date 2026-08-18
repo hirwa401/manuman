@@ -30,10 +30,12 @@
         <div id="stripeCardError" style="color:#e74c3c;font-size:0.85rem;margin-top:6px"></div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-top:18px">
+      <div style="display:flex;gap:12px;margin-top:18px;align-items:center;">
         <button class="btn-back" id="checkoutBack">Back</button>
-        <button class="btn-primary" id="checkoutPay">Pay Now</button>
+        <button class="btn-primary" id="checkoutPay"><i class="fas fa-lock"></i> Pay Now</button>
+        <div style="margin-left:8px;color:#777;font-size:0.95rem">Safe & secure payments via Stripe</div>
       </div>
+      <div class="secure-note" style="margin-top:12px;display:flex;align-items:center;gap:8px"><i class="fas fa-shield-alt"></i> Your card information is processed securely by Stripe. We never store card details.</div>
       <div id="checkoutMsg" style="margin-top:12px;font-weight:600"></div>
     </div>
 
