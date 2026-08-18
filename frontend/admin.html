@@ -689,7 +689,7 @@
       }
       document.getElementById('carFeatures').value = (car.features || []).join('\n');
       // populate existing gallery
-      window.editGallery = car.gallery ? [...car.gallery] : [];
+      window.editGallery = car.interior_images ? [...car.interior_images] : [];
       renderExistingGallery();
     }
     document.getElementById('modalOverlay').classList.add('open');
@@ -749,7 +749,7 @@
       for (let i = 0; i < galleryInput.files.length; i++) {
         try {
           const url = await uploadImage(galleryInput.files[i]);
-          images.push(url);
+              images.push(url);
         } catch {
           alert('One of the gallery uploads failed. Please retry.'); return;
         }
@@ -762,7 +762,7 @@
       category: document.getElementById('carCategory').value,
       price: document.getElementById('carPrice').value,
       image_url,
-      gallery: images,
+      interior_images: images,
       features: document.getElementById('carFeatures').value.split('\n').map(f => f.trim()).filter(Boolean)
     };
     if (!payload.year || !payload.make || !payload.model || !payload.price) {

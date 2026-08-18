@@ -25,12 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function openGallery(car) {
     galleryImages = [];
     if (car.image_url) galleryImages.push(car.image_url);
-    if (car.gallery && Array.isArray(car.gallery)) galleryImages.push(...car.gallery);
+    if (car.interior_images && Array.isArray(car.interior_images)) galleryImages.push(...car.interior_images);
     // dedupe
     galleryImages = [...new Set(galleryImages)];
     if (!galleryImages.length) { alert('No interior images available for this car.'); return; }
     galleryIndex = 0;
     document.getElementById('galleryImg').src = galleryImages[galleryIndex];
+    // caption
+    const caption = document.getElementById('galleryCaption');
+    if (caption) caption.textContent = `${car.year} ${car.make} ${car.model}`;
     const thumbs = document.getElementById('galleryThumbs'); thumbs.innerHTML = '';
     galleryImages.forEach((src, i) => {
       const t = document.createElement('img');
@@ -41,6 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('galleryModal').classList.add('open');
   }
   function closeGalleryModal() { document.getElementById('galleryModal').classList.remove('open'); }
+
+  function galleryNext() {
+    if (!galleryImages.length) return;
+    galleryIndex = (galleryIndex + 1) % galleryImages.length;
+    document.getElementById('galleryImg').src = galleryImages[galleryIndex];
+  }
+  function galleryPrev() {
+    if (!galleryImages.length) return;
+    galleryIndex = (galleryIndex - 1 + galleryImages.length) % galleryImages.length;
+    document.getElementById('galleryImg').src = galleryImages[galleryIndex];
+  }
+  // keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('galleryModal').classList.contains('open')) return;
+    if (e.key === 'ArrowRight') galleryNext();
+    if (e.key === 'ArrowLeft') galleryPrev();
+    if (e.key === 'Escape') closeGalleryModal();
+  });
 
 function updateNavAuth() {
   const authBtn = document.getElementById('navAuthBtn');

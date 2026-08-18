@@ -234,6 +234,11 @@
       <button class="bmodal-close" onclick="closeGalleryModal()"><i class="fas fa-times"></i></button>
       <div id="galleryMain" style="text-align:center">
         <img id="galleryImg" src="" alt="" style="max-width:100%;max-height:480px;object-fit:contain;border-radius:8px;border:1px solid #eee" />
+          <div id="galleryCaption" style="margin-top:10px;color:#333;font-weight:700"></div>
+          <div style="margin-top:8px;display:flex;gap:8px;justify-content:center">
+            <button class="btn-back" onclick="galleryPrev()"><i class="fas fa-chevron-left"></i></button>
+            <button class="btn-back" onclick="galleryNext()"><i class="fas fa-chevron-right"></i></button>
+          </div>
       </div>
       <div id="galleryThumbs" style="display:flex;gap:8px;margin-top:12px;overflow-x:auto;padding-top:8px"></div>
     </div>
