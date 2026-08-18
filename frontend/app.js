@@ -580,6 +580,7 @@ function initPreStart() {
   if (startBtn) startBtn.addEventListener('click', () => {
     if (dont && dont.checked) localStorage.setItem('seenPreStart','1');
     overlay.style.display = 'none';
+    // Enter the main site (scroll to fleet as default)
     document.getElementById('fleet').scrollIntoView({ behavior: 'smooth' });
   });
   if (viewBtn) viewBtn.addEventListener('click', () => { overlay.style.display = 'none'; document.getElementById('fleet').scrollIntoView({ behavior: 'smooth' }); });

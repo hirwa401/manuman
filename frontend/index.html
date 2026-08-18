@@ -10,22 +10,39 @@
 </head>
 <body>
 
-  <!-- PRE-START OVERLAY: show before users begin booking -->
+  <!-- FULL-SCREEN LANDING (pre-start) -->
   <div id="preStartOverlay" class="prestart-overlay" style="display:none">
-    <div class="prestart-card">
+    <div class="prestart-card landing-full">
       <button class="prestart-close" id="prestartClose" aria-label="Close">×</button>
-      <div class="prestart-gallery" id="prestartGallery">
-        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1400&q=80&auto=format&fit=crop" alt="Car 1" />
-        <img src="https://images.unsplash.com/photo-1549921296-3d3f28b6e8f4?w=1400&q=80&auto=format&fit=crop" alt="Car 2" />
-        <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?w=1400&q=80&auto=format&fit=crop" alt="Car 3" />
+      <div class="landing-hero">
+        <div class="landing-hero-media">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&q=80&auto=format&fit=crop" alt="ManuMan fleet" />
+        </div>
+        <div class="landing-hero-content">
+          <h1>ManuMan Mobility</h1>
+          <p class="prestart-lead">Reliable cars. Exceptional experiences. Airport delivery, 5-star service, and trusted local support in Portland, Maine.</p>
+          <div class="prestart-actions">
+            <button id="viewFleetBtn" class="btn-secondary">Browse Fleet</button>
+            <button id="startExperienceBtn" class="btn-primary">Enter ManuMan Experience</button>
+          </div>
+          <label class="prestart-skip"><input type="checkbox" id="dontShowAgain"> Don't show this again</label>
+        </div>
       </div>
-      <h2>Experience ManuMan Mobility</h2>
-      <p class="prestart-lead">Take a quick look at our fleet and features before you start booking. When you're ready, jump into the full experience.</p>
-      <div class="prestart-actions">
-        <button id="viewFleetBtn" class="btn-secondary">Browse Fleet</button>
-        <button id="startExperienceBtn" class="btn-primary">Start ManuMan Experience</button>
+      <div class="landing-features">
+        <div class="feature"><i class="fas fa-plane"></i><strong>Airport Delivery</strong><span>We deliver to Portland Jetport.</span></div>
+        <div class="feature"><i class="fas fa-shield-alt"></i><strong>Secure Payments</strong><span>Payments processed securely by Stripe.</span></div>
+        <div class="feature"><i class="fas fa-star"></i><strong>5-Star Hosts</strong><span>Highly rated by our customers.</span></div>
       </div>
-      <label class="prestart-skip"><input type="checkbox" id="dontShowAgain"> Don't show this again</label>
+      <div class="landing-contact">
+        <div>
+          <strong>Contact</strong>
+          <p><a href="tel:2072450080">207-245-0080</a> · <a href="mailto:Manumanmobility1@gmail.com">Manumanmobility1@gmail.com</a></p>
+        </div>
+        <div>
+          <strong>Follow</strong>
+          <p><a href="https://instagram.com/manumanmobility" target="_blank" rel="noopener">Instagram</a> · <a href="https://facebook.com/manumanmobility" target="_blank" rel="noopener">Facebook</a></p>
+        </div>
+      </div>
     </div>
   </div>
 
