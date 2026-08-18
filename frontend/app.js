@@ -368,15 +368,25 @@ function goToPayment() {
   if (!name) { err.textContent = 'Please enter your full name.'; return; }
   if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email.'; return; }
   err.textContent = '';
-
+  // Save booking draft and redirect to payment page
   const days = Math.ceil((new Date(returnDate) - new Date(pickupDate)) / 86400000);
+  if (days <= 0) { err.textContent = 'Return date must be after pick-up date.'; return; }
   const deliveryFee = pickupIsHQ ? 0 : 100;
   const base = days * Number(selectedCar.price);
   const discount = days > 7 ? Math.round(base * 0.10) : 0;
   const total = base - discount + deliveryFee;
-  document.getElementById('bTotalConfirm').textContent = `$${total} (${days} day${days > 1 ? 's' : ''}${discount ? ' · 10% off' : ''}${deliveryFee ? ' + $100 delivery' : ''})`;
-  selectPayMethod('card');
-  showBStep(2);
+  const draft = {
+    pickup, pickupDate, returnDate, days,
+    vehicle: selectedCar.id,
+    vehicleName: `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`,
+    customerName: name, customerEmail: email,
+    customerPhone: document.getElementById('bPhone').value.trim(),
+    paymentMethod: 'card', totalAmount: total, deliveryFee,
+    userId: currentUser?.id || null
+  };
+  sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
+  // Redirect to payment page
+  window.location.href = 'payment.html';
 }
 
 function goBack() { showBStep(1); }

@@ -813,6 +813,12 @@ img { max-width: 100%; display: block; }
   .prestart-card { padding: 18px; }
 }
 
+/* Payment page tweaks to use bmodal look on larger viewports */
+@media (min-width: 700px) {
+  #checkoutCard { box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+}
+
+
 
 /* ── AVAILABILITY CALENDAR ────────────────────────────── */
 .bform-full { grid-column: 1 / -1; }

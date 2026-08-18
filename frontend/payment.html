@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — ManuMan Mobility</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo"><img src="images/logo.jpeg" alt="logo"/></a>
+      <div></div>
+    </div>
+  </nav>
+
+  <main style="padding:120px 24px 40px;max-width:820px;margin:0 auto;">
+    <section class="section-header">
+      <h2>Secure Checkout</h2>
+      <p>Complete your payment to confirm the booking</p>
+    </section>
+
+    <div id="checkoutCard" class="bmodal" style="max-width:820px;margin:0 auto;padding:24px;">
+      <div id="checkoutSummary"></div>
+
+      <div style="margin-top:16px">
+        <h3>Payment</h3>
+        <div id="stripeCardElement" style="padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff"></div>
+        <div id="stripeCardError" style="color:#e74c3c;font-size:0.85rem;margin-top:6px"></div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:18px">
+        <button class="btn-back" id="checkoutBack">Back</button>
+        <button class="btn-primary" id="checkoutPay">Pay Now</button>
+      </div>
+      <div id="checkoutMsg" style="margin-top:12px;font-weight:600"></div>
+    </div>
+
+  </main>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="config.js"></script>
+  <script src="payment.js"></script>
+</body>
+</html>

@@ -183,29 +183,14 @@
         <button class="btn-primary bmodal-btn" onclick="goToPayment()">Continue to Payment <i class="fas fa-arrow-right"></i></button>
       </div>
 
-      <!-- STEP 2: Payment -->
+      <!-- STEP 2: Payment moved to separate page (payment.html) -->
       <div class="bstep" id="bstep2" style="display:none">
-        <h3 style="margin-bottom:6px">Payment Details</h3>
-        <p style="color:#888;font-size:0.88rem;margin-bottom:20px">Your total: <strong id="bTotalConfirm" style="color:#0d1b2a"></strong></p>
-        <div class="payment-methods">
-          <button class="pay-method active" id="payCard" onclick="selectPayMethod('card')"><i class="fas fa-credit-card"></i> Credit / Debit Card</button>
-          <button class="pay-method" id="payCash" onclick="selectPayMethod('cash')"><i class="fas fa-money-bill-wave"></i> Pay on Pickup</button>
-        </div>
-        <div id="cardFields">
-          <div class="bform-group" style="margin-top:16px">
-            <label>Card Details</label>
-            <div id="stripeCardElement" style="padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff"></div>
-            <div id="stripeCardError" style="color:#e74c3c;font-size:0.85rem;margin-top:6px"></div>
-          </div>
-          <div class="secure-note"><i class="fas fa-lock"></i> Payments are securely processed by Stripe. Card details are never stored.</div>
-        </div>
-        <div id="cashFields" style="display:none">
-          <div class="cash-info"><i class="fas fa-info-circle"></i> You will pay in cash when you pick up the vehicle. Your booking will be held as <strong>pending</strong> until confirmed by our team.</div>
-        </div>
+        <h3 style="margin-bottom:6px">Continue to Payment</h3>
+        <p style="color:#888;font-size:0.88rem;margin-bottom:20px">For secure payments, we'll move you to the checkout page.</p>
         <div class="bmodal-error" id="bPayError"></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back</button>
-          <button class="btn-primary bmodal-btn" onclick="submitBooking()">Confirm Booking <i class="fas fa-check"></i></button>
+          <button class="btn-primary bmodal-btn" id="continueToPaymentBtn">Continue to Payment <i class="fas fa-external-link-alt"></i></button>
         </div>
       </div>
 
@@ -357,6 +342,20 @@
           <div>
             <strong>email</strong>
             <p>manumanmobility1@@gmail.com</p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-instagram"></i>
+          <div>
+            <strong>Instagram</strong>
+            <a href="https://instagram.com/manumanmobility" target="_blank" rel="noopener">@manumanmobility</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-facebook"></i>
+          <div>
+            <strong>Facebook</strong>
+            <a href="https://facebook.com/manumanmobility" target="_blank" rel="noopener">ManuMan Mobility</a>
           </div>
         </div>
       </div>
