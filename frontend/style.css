@@ -769,6 +769,51 @@ img { max-width: 100%; display: block; }
   100% { background-position: -200% 0; }
 }
 
+/* ===== PRE-START OVERLAY ===== */
+.prestart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.prestart-card {
+  width: 100%;
+  max-width: 980px;
+  background: var(--white);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  position: relative;
+  text-align: center;
+}
+.prestart-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #666;
+}
+.prestart-gallery { display: flex; gap: 8px; margin-bottom: 14px; }
+.prestart-gallery img { width: 33.333%; height: 220px; object-fit: cover; border-radius: 8px; }
+.prestart-card h2 { margin-bottom: 6px; color: var(--dark-navy); }
+.prestart-lead { color: var(--text-gray); margin-bottom: 16px; }
+.prestart-actions { display:flex; gap:12px; justify-content:center; margin-bottom:12px; }
+.prestart-skip { display:block; color:#777; font-size:0.9rem; margin-top:8px; }
+
+@media (max-width: 760px) {
+  .prestart-gallery { flex-direction: row; gap: 6px; }
+  .prestart-gallery img { width: calc(33.333% - 4px); height: 140px; }
+  .prestart-card { padding: 18px; }
+}
+
+
 /* ── AVAILABILITY CALENDAR ────────────────────────────── */
 .bform-full { grid-column: 1 / -1; }
 .avail-calendar {
