@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "manuman-admin",
+    "name": "ManuMan Admin",
     "slug": "manuman-mobility",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,10 +15,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#0d1b2a",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "package": "com.manumanmobility.manumanmobility"
     },
