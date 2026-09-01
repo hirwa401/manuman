@@ -1,0 +1,27 @@
+{
+  "name": "ManuMan Mobility",
+  "short_name": "ManuMan",
+  "description": "Reliable Cars. Exceptional Experiences. Portland, Maine's trusted car rental.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "images/logo.jpeg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "images/logo.jpeg", "sizes": "512x512", "type": "image/jpeg" }
+  ],
+  "categories": ["travel", "business"],
+  "shortcuts": [
+    {
+      "name": "Book a Car",
+      "url": "/#fleet",
+      "description": "Browse our fleet and book a car"
+    },
+    {
+      "name": "Contact Us",
+      "url": "/#contact",
+      "description": "Get in touch with ManuMan Mobility"
+    }
+  ]
+}
