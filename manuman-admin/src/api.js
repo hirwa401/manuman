@@ -1,18 +1,33 @@
-const BASE = 'https://manuman-api.vercel.app/api';
+const BASE = __DEV__ ? 'http://localhost:5000/api' : 'https://manuman-api.vercel.app/api';
+
+async function request(path, options = {}) {
+  let response;
+  try {
+    response = await fetch(`${BASE}${path}`, options);
+  } catch (error) {
+    throw new Error('Unable to reach the server. Check your internet connection.');
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || `Request failed (${response.status}).`);
+  }
+  return data;
+}
 
 export const api = {
-  get: (path) => fetch(`${BASE}${path}`).then(r => r.json()),
-  post: (path, body) => fetch(`${BASE}${path}`, {
+  get: (path) => request(path),
+  post: (path, body) => request(path, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  }).then(r => r.json()),
-  patch: (path, body) => fetch(`${BASE}${path}`, {
+  }),
+  patch: (path, body) => request(path, {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  }).then(r => r.json()),
-  put: (path, body) => fetch(`${BASE}${path}`, {
+  }),
+  put: (path, body) => request(path, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  }).then(r => r.json()),
-  del: (path) => fetch(`${BASE}${path}`, { method: 'DELETE' }).then(r => r.json()),
+  }),
+  del: (path) => request(path, { method: 'DELETE' }),
 };

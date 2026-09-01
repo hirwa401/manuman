@@ -12,9 +12,14 @@ export default function BookingsScreen() {
   const [filter, setFilter] = useState('all');
 
   async function load() {
-    const data = await api.get('/bookings');
-    setBookings(Array.isArray(data) ? data : []);
-    setLoading(false); setRefreshing(false);
+    try {
+      const data = await api.get('/bookings');
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (error) {
+      Alert.alert('Could not load bookings', error.message);
+    } finally {
+      setLoading(false); setRefreshing(false);
+    }
   }
 
   useEffect(() => { load(); }, []);

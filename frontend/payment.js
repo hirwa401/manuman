@@ -48,7 +48,7 @@ async function initPaymentPage() {
       if (error) { msg.style.color = 'red'; msg.textContent = error.message; document.getElementById('checkoutPay').disabled = false; return; }
       if (paymentIntent.status !== 'succeeded') { msg.style.color = 'red'; msg.textContent = 'Payment not completed'; document.getElementById('checkoutPay').disabled = false; return; }
       // Save booking to server
-      const bookingRes = await fetch(`${API}/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, paymentMethod: 'card', totalAmount: draft.totalAmount, status: 'paid' }) });
+      const bookingRes = await fetch(`${API}/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, paymentMethod: 'card', totalAmount: draft.totalAmount, status: 'paid', driverLicenseImage: draft.driverLicenseImage || '' }) });
       if (bookingRes.ok) {
         sessionStorage.removeItem('pendingBooking');
         msg.style.color = 'green';

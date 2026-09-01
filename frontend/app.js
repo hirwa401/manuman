@@ -136,7 +136,7 @@ async function signOut() {
 }
 
 async function becomeHost() {
-  if (!currentUser) { openAuthModal('login'); return; }
+  if (!currentUser) { window.location.href = 'login.html'; return; }
   const token = await getToken();
   const res = await fetch(`${API}/become-host`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
   if (res.ok) {
@@ -149,7 +149,7 @@ async function becomeHost() {
 }
 
 async function openMyBookings() {
-  if (!currentUser) { openAuthModal('login'); return; }
+  if (!currentUser) { window.location.href = 'login.html'; return; }
   document.getElementById('myBookingsModal').style.display = 'flex';
   const list = document.getElementById('myBookingsList');
   list.innerHTML = '<p style="color:#888">Loading...</p>';
@@ -273,10 +273,14 @@ async function openBookingModal(car) {
 
   pickupIsHQ = true;
   setPickupHQ();
-  ['bPickup','bPickupDate','bReturnDate','bName','bEmail','bPhone'].forEach(id => {
+  ['bPickup','bPickupDate','bReturnDate','bName','bEmail','bPhone','bDriverLicense','bDriverLicenseImage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const termsToggle = document.getElementById('bTermsAccepted');
+  if (termsToggle) termsToggle.checked = false;
+  const policy = document.getElementById('termsPolicy');
+  if (policy) policy.style.display = 'none';
   // Reset Stripe card element for fresh mount next time
   if (stripeCardElement) {
     stripeCardElement.unmount();
@@ -367,9 +371,12 @@ function calNext() {
 }
 
 // Close on overlay click
-      grid.innerHTML = fleet.map((car, i) => `
-  if (e.target === e.currentTarget) closeBookingModal();
-});
+const bookingModal = document.getElementById('bookingModal');
+if (bookingModal) {
+  bookingModal.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeBookingModal();
+  });
+}
 
 function showBStep(n) {
   [1,2,3].forEach(i => document.getElementById(`bstep${i}`).style.display = i === n ? 'block' : 'none');
@@ -397,12 +404,36 @@ function updateSummary() {
   document.getElementById('bSummary').style.display = 'block';
 }
 
-function goToPayment() {
+function toggleTermsPolicy() {
+  const policy = document.getElementById('termsPolicy');
+  if (!policy) return;
+  policy.style.display = policy.style.display === 'none' ? 'block' : 'none';
+}
+
+async function uploadDriverLicensePhoto(file) {
+  if (!file) throw new Error("A clear photo of your driver's license is required before booking.");
+
+  const response = await fetch(`${API}/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': file.type || 'image/jpeg' },
+    body: await file.arrayBuffer()
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || 'Could not upload your license photo.');
+  if (!data.url) throw new Error('The uploaded license photo could not be saved.');
+  return data.url;
+}
+
+async function goToPayment() {
   const pickup = pickupIsHQ ? 'Headquarters' : document.getElementById('bPickup').value.trim();
   const pickupDate = document.getElementById('bPickupDate').value;
   const returnDate = document.getElementById('bReturnDate').value;
   const name = document.getElementById('bName').value.trim();
   const email = document.getElementById('bEmail').value.trim();
+  const driverLicense = document.getElementById('bDriverLicense').value.trim();
+  const driverLicenseFile = document.getElementById('bDriverLicenseImage')?.files?.[0] || null;
+  const termsAccepted = document.getElementById('bTermsAccepted').checked;
   const err = document.getElementById('bError');
 
   if (!pickupIsHQ && !pickup) { err.textContent = 'Please enter a delivery address.'; return; }
@@ -411,26 +442,38 @@ function goToPayment() {
   if (returnDate <= pickupDate) { err.textContent = 'Return date must be after pick-up date.'; return; }
   if (!name) { err.textContent = 'Please enter your full name.'; return; }
   if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email.'; return; }
-  err.textContent = '';
-  // Save booking draft and redirect to payment page
-  const days = Math.ceil((new Date(returnDate) - new Date(pickupDate)) / 86400000);
-  if (days <= 0) { err.textContent = 'Return date must be after pick-up date.'; return; }
-  const deliveryFee = pickupIsHQ ? 0 : 100;
-  const base = days * Number(selectedCar.price);
-  const discount = days > 7 ? Math.round(base * 0.10) : 0;
-  const total = base - discount + deliveryFee;
-  const draft = {
-    pickup, pickupDate, returnDate, days,
-    vehicle: selectedCar.id,
-    vehicleName: `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`,
-    customerName: name, customerEmail: email,
-    customerPhone: document.getElementById('bPhone').value.trim(),
-    paymentMethod: 'card', totalAmount: total, deliveryFee,
-    userId: currentUser?.id || null
-  };
-  sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
-  // Redirect to payment page
-  window.location.href = 'payment.html';
+
+  const validation = typeof validateBookingRequirements === 'function'
+    ? validateBookingRequirements({ driverLicense, driverLicenseImage: driverLicenseFile, termsAccepted })
+    : { ok: !!(driverLicense && driverLicenseFile && termsAccepted), message: 'Please enter your driver license, upload your photo, and agree to the terms.' };
+  if (!validation.ok) { err.textContent = validation.message; return; }
+
+  try {
+    err.textContent = 'Uploading your driver\'s license photo...';
+    const driverLicenseImage = await uploadDriverLicensePhoto(driverLicenseFile);
+    err.textContent = '';
+
+    const days = Math.ceil((new Date(returnDate) - new Date(pickupDate)) / 86400000);
+    if (days <= 0) { err.textContent = 'Return date must be after pick-up date.'; return; }
+    const deliveryFee = pickupIsHQ ? 0 : 100;
+    const base = days * Number(selectedCar.price);
+    const discount = days > 7 ? Math.round(base * 0.10) : 0;
+    const total = base - discount + deliveryFee;
+    const draft = {
+      pickup, pickupDate, returnDate, days,
+      vehicle: selectedCar.id,
+      vehicleName: `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`,
+      customerName: name, customerEmail: email,
+      customerPhone: document.getElementById('bPhone').value.trim(),
+      driverLicense, driverLicenseImage, termsAccepted,
+      paymentMethod: 'card', totalAmount: total, deliveryFee,
+      userId: currentUser?.id || null
+    };
+    sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
+    window.location.href = 'payment.html';
+  } catch (error) {
+    err.textContent = error.message || 'Please upload a valid driver\'s license photo.';
+  }
 }
 
 function goBack() { showBStep(1); }
@@ -581,7 +624,11 @@ document.getElementById('ratingForm').addEventListener('submit', async (e) => {
       highlightStars(0);
       document.getElementById('ratingName').value = '';
       document.getElementById('ratingVal').value = 0;
-    } else { msg.style.color = 'red'; msg.textContent = '❌ Something went wrong.'; }
+    } else {
+      const error = await res.json().catch(() => ({}));
+      msg.style.color = 'red';
+      msg.textContent = `❌ ${error.message || 'Something went wrong.'}`;
+    }
   } catch { msg.style.color = 'red'; msg.textContent = '❌ Server offline.'; }
 });
 

@@ -58,15 +58,17 @@ app.post('/api/admin/login', (req, res) => {
 app.post('/api/upload', async (req, res) => {
   try {
     const contentType = req.headers['content-type'] || '';
+    const bucketName = req.body?.bucket || req.query?.bucket || 'car-images';
+
     if (contentType.startsWith('application/json')) {
-      const { image, contentType: ct } = req.body;
+      const { image, contentType: ct, bucket } = req.body;
       if (!image) return res.status(400).json({ message: 'No image provided.' });
       const buffer = Buffer.from(image, 'base64');
       const ext = (ct || 'image/jpeg').split('/')[1]?.split(';')[0] || 'jpeg';
-      const filename = `car-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('car-images').upload(filename, buffer, { contentType: ct || 'image/jpeg', upsert: true });
+      const filename = `${bucket || bucketName}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from(bucket || bucketName).upload(filename, buffer, { contentType: ct || 'image/jpeg', upsert: true });
       if (error) return res.status(500).json({ message: error.message });
-      const { data } = supabase.storage.from('car-images').getPublicUrl(filename);
+      const { data } = supabase.storage.from(bucket || bucketName).getPublicUrl(filename);
       res.json({ url: data.publicUrl });
     } else {
       const chunks = [];
@@ -75,10 +77,10 @@ app.post('/api/upload', async (req, res) => {
         try {
           const buffer = Buffer.concat(chunks);
           const ext = contentType.split('/')[1]?.split(';')[0] || 'jpeg';
-          const filename = `car-${Date.now()}.${ext}`;
-          const { error } = await supabase.storage.from('car-images').upload(filename, buffer, { contentType, upsert: true });
+          const filename = `${bucketName}-${Date.now()}.${ext}`;
+          const { error } = await supabase.storage.from(bucketName).upload(filename, buffer, { contentType, upsert: true });
           if (error) return res.status(500).json({ message: error.message });
-          const { data } = supabase.storage.from('car-images').getPublicUrl(filename);
+          const { data } = supabase.storage.from(bucketName).getPublicUrl(filename);
           res.json({ url: data.publicUrl });
         } catch (e) { res.status(500).json({ message: e.message }); }
       });
@@ -115,17 +117,30 @@ app.delete('/api/fleet/:id', async (req, res) => {
 
 // ── BOOKINGS ──────────────────────────────────────────────
 app.post('/api/bookings', async (req, res) => {
-  const { pickup, pickupDate, returnDate, vehicle, vehicleName, customerName, customerEmail, customerPhone, paymentMethod, totalAmount } = req.body;
+  const { pickup, pickupDate, returnDate, vehicle, vehicleName, customerName, customerEmail, customerPhone, paymentMethod, totalAmount, driverLicense, driverLicenseImage, termsAccepted, userId } = req.body;
+  const normalizedLicense = (driverLicense || '').trim();
+  const normalizedLicenseImage = (driverLicenseImage || '').trim();
+  const normalizedTerms = termsAccepted === true || termsAccepted === 'true';
   if (!pickup || !pickupDate || !returnDate || !vehicle)
     return res.status(400).json({ message: 'All fields are required.' });
+  if (!normalizedLicense)
+    return res.status(400).json({ message: "Driver's license or ID number is required before booking." });
+  if (!normalizedLicenseImage)
+    return res.status(400).json({ message: "A clear driver's license photo is required before booking." });
+  if (!normalizedTerms)
+    return res.status(400).json({ message: 'You must agree to the Terms & Conditions before booking.' });
   if (returnDate <= pickupDate)
     return res.status(400).json({ message: 'Return date must be after pick-up date.' });
   const { data, error } = await supabase.from('bookings').insert([{
+    user_id: userId || null,
     pickup, pickup_date: pickupDate, return_date: returnDate,
     vehicle_id: vehicle, vehicle_name: vehicleName || vehicle,
     customer_name: customerName || '', customer_email: customerEmail || '',
     customer_phone: customerPhone || '', payment_method: paymentMethod || 'cash',
     total_amount: totalAmount || 0,
+    driver_license: normalizedLicense,
+    driver_license_image: normalizedLicenseImage,
+    terms_accepted: normalizedTerms,
     status: paymentMethod === 'card' ? 'paid' : 'pending'
   }]).select().single();
   if (error) return res.status(500).json({ message: error.message });
@@ -170,6 +185,37 @@ app.delete('/api/contacts/:id', async (req, res) => {
   const { error } = await supabase.from('contacts').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Contact deleted' });
+});
+
+// ── RATINGS ──────────────────────────────────────────────
+app.post('/api/ratings', async (req, res) => {
+  const { name, rating } = req.body;
+  const numericRating = Number(rating);
+  if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5)
+    return res.status(400).json({ message: 'Rating must be a whole number from 1 to 5.' });
+  const { data, error } = await supabase.from('ratings').insert([{ name: name || 'Anonymous', rating: numericRating }]).select().single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.status(201).json({ message: 'Rating submitted', rating: data });
+});
+
+app.get('/api/ratings', async (req, res) => {
+  const { data, error } = await supabase.from('ratings').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.delete('/api/ratings/:id', async (req, res) => {
+  const { error } = await supabase.from('ratings').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ message: error.message });
+  res.json({ message: 'Rating deleted' });
+});
+
+// ── BOOKINGS AVAILABILITY ─────────────────────────────────
+app.get('/api/bookings/availability/:carId', async (req, res) => {
+  const { data, error } = await supabase.from('bookings')
+    .select('pickup_date, return_date').eq('vehicle_id', req.params.carId).not('status', 'eq', 'cancelled');
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
 });
 
 const PORT = process.env.PORT || 5000;

@@ -10,10 +10,15 @@ export default function LoginScreen({ onLogin }) {
   async function handleLogin() {
     if (!password) { setError('Enter your admin password.'); return; }
     setLoading(true); setError('');
-    const data = await api.post('/admin/login', { password });
-    setLoading(false);
-    if (data.success) onLogin();
-    else setError('Wrong password. Try again.');
+    try {
+      const data = await api.post('/admin/login', { password });
+      if (data.success) onLogin();
+      else setError('Wrong password. Try again.');
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

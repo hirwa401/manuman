@@ -18,14 +18,21 @@ export default function DashboardScreen() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   async function load() {
-    const [b, f, c] = await Promise.all([api.get('/bookings'), api.get('/fleet'), api.get('/contacts')]);
-    setBookings(Array.isArray(b) ? b : []);
-    setFleet(Array.isArray(f) ? f : []);
-    setContacts(Array.isArray(c) ? c : []);
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      setError('');
+      const [b, f, c] = await Promise.all([api.get('/bookings'), api.get('/fleet'), api.get('/contacts')]);
+      setBookings(Array.isArray(b) ? b : []);
+      setFleet(Array.isArray(f) ? f : []);
+      setContacts(Array.isArray(c) ? c : []);
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -37,6 +44,16 @@ export default function DashboardScreen() {
   const recent = [...bookings].slice(0, 5);
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#F5A800" /></View>;
+
+  if (error) return (
+    <View style={s.center}>
+      <Text style={s.errorTitle}>Could not load dashboard</Text>
+      <Text style={s.errorText}>{error}</Text>
+      <TouchableOpacity style={s.retryBtn} onPress={() => { setLoading(true); load(); }}>
+        <Text style={s.retryText}>Try again</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <ScrollView style={s.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5A800" />}>
@@ -78,6 +95,10 @@ export default function DashboardScreen() {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f6f9' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f6f9' },
+  errorTitle: { color: '#0d1b2a', fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  errorText: { color: '#666', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, lineHeight: 21 },
+  retryBtn: { backgroundColor: '#F5A800', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, marginTop: 18 },
+  retryText: { color: '#0d1b2a', fontSize: 14, fontWeight: '800' },
   header: { backgroundColor: '#0d1b2a', padding: 24, paddingTop: 16, paddingBottom: 28 },
   greeting: { color: 'rgba(255,255,255,0.6)', fontSize: 13 },
   headerTitle: { color: '#fff', fontSize: 26, fontWeight: '800', marginTop: 2 },

@@ -24,9 +24,14 @@ export default function FleetScreen() {
   const [interiorPreviews, setInteriorPreviews] = useState([]);
 
   async function load() {
-    const data = await api.get('/fleet');
-    setFleet(Array.isArray(data) ? data : []);
-    setLoading(false); setRefreshing(false);
+    try {
+      const data = await api.get('/fleet');
+      setFleet(Array.isArray(data) ? data : []);
+    } catch (error) {
+      Alert.alert('Could not load fleet', error.message);
+    } finally {
+      setLoading(false); setRefreshing(false);
+    }
   }
 
   useEffect(() => { load(); }, []);

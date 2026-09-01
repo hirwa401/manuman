@@ -8,9 +8,14 @@ export default function ContactsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
-    const data = await api.get('/contacts');
-    setContacts(Array.isArray(data) ? data : []);
-    setLoading(false); setRefreshing(false);
+    try {
+      const data = await api.get('/contacts');
+      setContacts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      Alert.alert('Could not load messages', error.message);
+    } finally {
+      setLoading(false); setRefreshing(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
