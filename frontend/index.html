@@ -17,45 +17,6 @@
 </head>
 <body>
 
-  <!-- FULL-SCREEN LANDING (pre-start) -->
-  <div id="preStartOverlay" class="prestart-overlay" style="display:none">
-    <div class="prestart-card landing-full">
-      <button class="prestart-close" id="prestartClose" aria-label="Close">×</button>
-      <div class="landing-hero">
-        <div class="landing-hero-media">
-          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&q=80&auto=format&fit=crop" alt="ManuMan fleet" />
-        </div>
-        <div class="landing-hero-content">
-          <h1>ManuMan Mobility</h1>
-          <p class="prestart-lead">Reliable cars. Exceptional experiences. Airport delivery, 5-star service, and trusted local support in Portland, Maine.</p>
-          <div class="prestart-actions">
-            <button id="viewFleetBtn" class="btn-secondary">Browse Fleet</button>
-            <button id="startExperienceBtn" class="btn-primary">Enter ManuMan Experience</button>
-          </div>
-          <label class="prestart-skip"><input type="checkbox" id="dontShowAgain"> Don't show this again</label>
-        </div>
-      </div>
-      <div class="landing-features">
-        <div class="feature"><i class="fas fa-plane"></i><strong>Airport Delivery</strong><span>We deliver to Portland Jetport.</span></div>
-        <div class="feature"><i class="fas fa-shield-alt"></i><strong>Secure Payments</strong><span>Payments processed securely by Stripe.</span></div>
-        <div class="feature"><i class="fas fa-star"></i><strong>5-Star Hosts</strong><span>Highly rated by our customers.</span></div>
-      </div>
-      <div class="landing-contact">
-        <div>
-          <strong>Contact</strong>
-          <p><a href="tel:2072450080">207-245-0080</a> · <a href="mailto:Manumanmobility1@gmail.com">Manumanmobility1@gmail.com</a></p>
-        </div>
-        <div>
-          <strong>Follow</strong>
-          <p class="landing-socials">
-            <a class="social-link" href="https://instagram.com/manumanmobility" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i><span>Instagram</span></a>
-            <a class="social-link" href="https://facebook.com/manumanmobility" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i><span>Facebook</span></a>
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-container">
@@ -64,9 +25,10 @@
       </a>
       <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
       <ul class="nav-links" id="navLinks">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
         <li><a href="#fleet">Our Fleet</a></li>
         <li><a href="#how">How It Works</a></li>
-        <li><a href="#why">Why Us</a></li>
         <li><a href="#contact">Contact</a></li>
         <li><a href="#booking" class="btn-nav">Book Now</a></li>
         <li id="navAuthBtn"><a href="login.html" class="btn-nav btn-nav-outline">Sign In</a></li>
@@ -84,16 +46,78 @@
   </nav>
 
   <!-- HERO -->
-  <section class="hero">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <h1>Reliable Cars.<br/><span>Exceptional Experiences.</span></h1>
-      <p>Portland, Maine's trusted car rental — Airport delivery available.</p>
-      <a href="#booking" class="btn-primary">Reserve Your Car</a>
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <img src="https://itdqaekjtojpksrgijfn.supabase.co/storage/v1/object/public/car-images/car-1785604037737.png" alt="ManuMan Fleet" id="heroBgImg" />
+      <div class="hero-overlay"></div>
     </div>
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-star"></i> Portland's #1 Rated Car Rental</div>
+      <h1>Reliable Cars.<br/><span>Exceptional Experiences.</span></h1>
+      <p>Portland, Maine's trusted car rental — clean vehicles, on-time delivery, and 5-star service every time.</p>
+      <div class="hero-actions">
+        <a href="#booking" class="btn-primary">Reserve Your Car</a>
+        <a href="#fleet" class="btn-hero-outline">View Our Fleet</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>5★</strong><span>Turo Rating</span></div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat"><strong>100+</strong><span>Happy Customers</span></div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat"><strong>3</strong><span>Vehicles Available</span></div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint"><i class="fas fa-chevron-down"></i></div>
+  </section>
 
-    <!-- BOOKING WIDGET -->
-    <div class="booking-bar" id="booking">
+  <!-- TRUST BAR -->
+  <div class="trust-bar">
+    <div class="trust-item"><i class="fas fa-plane"></i><span>Airport Delivery</span></div>
+    <div class="trust-item"><i class="fas fa-shield-alt"></i><span>Clean & Maintained</span></div>
+    <div class="trust-item"><i class="fas fa-clock"></i><span>On Time. Every Time.</span></div>
+    <div class="trust-item"><i class="fas fa-user-tie"></i><span>Exceptional Service</span></div>
+    <div class="trust-item"><i class="fas fa-star"></i><span>5-Star Turo Host</span></div>
+  </div>
+
+  <!-- ABOUT / MISSION / VISION -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <div class="about-text">
+        <div class="about-label">Who We Are</div>
+        <h2>Built on Trust.<br/>Driven by Service.</h2>
+        <p class="about-lead">ManuMan Mobility was founded with one simple belief — renting a car should feel as good as the trip itself. Based in Portland, Maine, we are a locally owned and operated car rental service committed to making every journey smooth, affordable, and stress-free.</p>
+        <p class="about-body">We started because we saw a gap in the market — big rental companies that treat customers like numbers. We do things differently. Every vehicle in our fleet is personally maintained, thoroughly cleaned, and delivered on time. We know your time matters, and we show up for it.</p>
+        <a href="#fleet" class="btn-primary" style="margin-top:8px">See Our Fleet</a>
+      </div>
+      <div class="about-cards">
+        <div class="about-card">
+          <div class="about-card-icon"><i class="fas fa-bullseye"></i></div>
+          <h3>Our Mission</h3>
+          <p>To provide Portland, Maine with reliable, affordable, and professional car rental experiences — delivered with honesty, care, and a personal touch that big companies can't offer.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-card-icon"><i class="fas fa-eye"></i></div>
+          <h3>Our Vision</h3>
+          <p>To become Maine's most trusted local car rental brand — known not just for our vehicles, but for the relationships we build and the communities we serve.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-card-icon"><i class="fas fa-hands-helping"></i></div>
+          <h3>Our Goal</h3>
+          <p>To make every customer feel like a priority — from the moment they book to the moment they return the keys. No hidden fees, no surprises, just great service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </section>
+
+  <!-- BOOKING WIDGET -->
+  <section class="booking-section" id="booking">
+    <div class="booking-section-inner">
+      <div class="booking-section-header">
+        <h2>Book Your Car</h2>
+        <p>Select your dates and vehicle — we'll handle the rest</p>
+      </div>
       <form class="booking-form" id="bookingForm">
         <div class="form-group">
           <label><i class="fas fa-map-marker-alt"></i> Pick-up Location</label>
@@ -118,16 +142,6 @@
     </div>
   </section>
 
-  <!-- TRUST BAR -->
-  <div class="trust-bar">
-    <div class="trust-item"><i class="fas fa-plane"></i><span>Airport Delivery</span></div>
-    <div class="trust-item"><i class="fas fa-shield-alt"></i><span>Clean & Maintained</span></div>
-    <div class="trust-item"><i class="fas fa-clock"></i><span>On Time. Every Time.</span></div>
-    <div class="trust-item"><i class="fas fa-user-tie"></i><span>Exceptional Service</span></div>
-    <div class="trust-item"><i class="fas fa-star"></i><span>5-Star Turo Host</span></div>
-  </div>
-
-  <!-- FLEET -->
   <section class="fleet" id="fleet">
     <div class="section-header">
       <h2>Our Fleet</h2>

@@ -657,25 +657,4 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   }
 });
 
-// ===== Pre-start overlay behavior =====
-function initPreStart() {
-  const overlay = document.getElementById('preStartOverlay');
-  if (!overlay) return;
-  const seen = localStorage.getItem('seenPreStart');
-  if (seen === '1') { overlay.style.display = 'none'; return; }
-  overlay.style.display = 'flex';
-  const startBtn = document.getElementById('startExperienceBtn');
-  const viewBtn = document.getElementById('viewFleetBtn');
-  const closeBtn = document.getElementById('prestartClose');
-  const dont = document.getElementById('dontShowAgain');
-  if (startBtn) startBtn.addEventListener('click', () => {
-    if (dont && dont.checked) localStorage.setItem('seenPreStart','1');
-    overlay.style.display = 'none';
-    // Enter the main site (scroll to fleet as default)
-    document.getElementById('fleet').scrollIntoView({ behavior: 'smooth' });
-  });
-  if (viewBtn) viewBtn.addEventListener('click', () => { overlay.style.display = 'none'; document.getElementById('fleet').scrollIntoView({ behavior: 'smooth' }); });
-  if (closeBtn) closeBtn.addEventListener('click', () => { overlay.style.display = 'none'; });
-}
 
-document.addEventListener('DOMContentLoaded', initPreStart);
