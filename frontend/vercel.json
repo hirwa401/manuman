@@ -1,4 +1,12 @@
 {
   "version": 2,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "manumanmobility.vercel.app" }],
+      "destination": "https://manumanmobility.com/$1",
+      "permanent": true
+    }
+  ],
   "routes": [{ "src": "/(.*)", "dest": "/$1" }]
 }
