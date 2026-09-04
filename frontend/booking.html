@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     .booking-page { background: #f4f6f9; min-height: 100vh; padding: 100px 24px 60px; }
-    .booking-page-inner { max-width: 860px; margin: 0 auto; }
+    .booking-page-inner { max-width: 1100px; margin: 0 auto; }
     .booking-page-header { text-align: center; margin-bottom: 40px; }
     .booking-page-header h1 { font-size: 2.2rem; font-weight: 900; color: #0d1b2a; margin-bottom: 8px; }
     .booking-page-header p { color: #666; font-size: 1rem; }
@@ -33,15 +33,36 @@
     .pickup-opt.active { border-color:#F5A800; background:#fff8e6; color:#333; font-weight:600; }
     .pickup-free { background:#2ecc71; color:#fff; border-radius:4px; padding:1px 6px; font-size:0.75rem; margin-left:4px; }
     .pickup-fee { background:#e67e22; color:#fff; border-radius:4px; padding:1px 6px; font-size:0.75rem; margin-left:4px; }
-    .car-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-    .car-select-card { border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
-    .car-select-card:hover { border-color: #F5A800; }
-    .car-select-card.selected { border-color: #F5A800; box-shadow: 0 0 0 3px rgba(245,168,0,0.2); }
-    .car-select-card img { width:100%; height:130px; object-fit:cover; }
-    .car-select-info { padding: 12px; }
-    .car-select-info h4 { font-size: 0.9rem; font-weight: 800; color: #0d1b2a; margin-bottom: 4px; }
-    .car-select-info span { font-size: 0.82rem; color: #F5A800; font-weight: 700; }
-    .car-select-check { display:none; }
+    .fleet-search { display:flex; align-items:center; gap:10px; background:#f4f6f9; border:1.5px solid #e0e0e0; border-radius:10px; padding:10px 16px; margin-bottom:20px; }
+    .fleet-search i { color:#F5A800; font-size:1rem; flex-shrink:0; }
+    .fleet-search input { border:none; background:transparent; outline:none; font-size:0.95rem; color:#0d1b2a; width:100%; font-family:inherit; }
+    .fleet-search input::placeholder { color:#aaa; }
+    .car-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .car-select-card {
+      background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden; cursor: pointer; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      border: 2px solid transparent;
+    }
+    .car-select-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.16); border-color: #F5A800; }
+    .car-select-card.selected { border-color: #F5A800; box-shadow: 0 0 0 4px rgba(245,168,0,0.25); transform: translateY(-5px); }
+    .car-select-card .car-badge { position:absolute; top:14px; left:14px; background:#0d1b2a; color:#F5A800; font-size:0.72rem; font-weight:800; padding:4px 12px; border-radius:20px; letter-spacing:1px; z-index:1; }
+    .car-select-card .selected-tag { position:absolute; top:14px; right:14px; background:#F5A800; color:#0d1b2a; font-size:0.72rem; font-weight:800; padding:4px 12px; border-radius:20px; z-index:1; display:none; }
+    .car-select-card.selected .selected-tag { display:block; }
+    .car-select-card img { width:100%; height:200px; object-fit:cover; display:block; }
+    .car-select-info { padding: 18px 20px 20px; }
+    .car-select-year { font-size:0.78rem; color:#F5A800; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+    .car-select-info h4 { font-size:1.15rem; font-weight:800; color:#0d1b2a; margin:3px 0 10px; }
+    .car-select-features { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .car-select-features li { font-size:0.84rem; color:#666; display:flex; align-items:center; gap:7px; list-style:none; }
+    .car-select-features li i { color:#F5A800; font-size:0.8rem; }
+    .car-select-footer { display:flex; align-items:center; justify-content:space-between; border-top:1px solid #eee; padding-top:14px; }
+    .car-select-price { font-size:0.88rem; color:#666; }
+    .car-select-price strong { font-size:1.2rem; color:#0d1b2a; }
+    .car-select-btn { background:#F5A800; border:none; padding:9px 18px; border-radius:6px; font-weight:700; font-size:0.85rem; color:#0d1b2a; cursor:pointer; transition:background 0.2s; }
+    .car-select-btn:hover { background:#d4900a; }
+    .car-select-card.selected .car-select-btn { background:#0d1b2a; color:#F5A800; }
+    .no-results { text-align:center; color:#aaa; padding:40px; font-style:italic; grid-column:1/-1; }
     .bpage-summary { background: #0d1b2a; border-radius: 10px; padding: 20px 24px; }
     .bpage-summary-row { display:flex; justify-content:space-between; color:rgba(255,255,255,0.7); font-size:0.88rem; margin-bottom:8px; }
     .bpage-summary-row strong { color:#fff; }
@@ -105,6 +126,10 @@
       <!-- STEP 1: Choose Car -->
       <div class="bpage-card">
         <h2><i class="fas fa-car"></i> Choose Your Vehicle</h2>
+        <div class="fleet-search">
+          <i class="fas fa-search"></i>
+          <input type="text" id="carSearch" placeholder="Search by make, model or category..." oninput="filterCars()"/>
+        </div>
         <div class="car-select-grid" id="carSelectGrid">
           <p style="color:#aaa">Loading fleet...</p>
         </div>

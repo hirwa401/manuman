@@ -8,30 +8,53 @@ let bookedRanges = [];
 let calYear, calMonth;
 const today = new Date().toISOString().split('T')[0];
 
+let allFleet = [];
+
 // ── FLEET ─────────────────────────────────────────────────
 async function loadFleet() {
   const grid = document.getElementById('carSelectGrid');
   try {
     const res = await fetch(`${API_URL}/fleet`);
-    const fleet = await res.json();
-    if (!fleet.length) { grid.innerHTML = '<p style="color:#aaa">No vehicles available right now.</p>'; return; }
-    grid.innerHTML = fleet.map(car => `
-      <div class="car-select-card" id="car-${car.id}" onclick="selectCar(${JSON.stringify(car).replace(/"/g,'&quot;')})">
-        <img src="${car.image_url || 'images/fleet-card.png'}" alt="${car.year} ${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'"/>
-        <div class="car-select-info">
-          <h4>${car.year} ${car.make} ${car.model}</h4>
-          <span>$${car.price}/day</span>
-        </div>
-      </div>`).join('');
+    allFleet = await res.json();
+    if (!allFleet.length) { grid.innerHTML = '<p style="color:#aaa">No vehicles available right now.</p>'; return; }
+    renderCarGrid(allFleet);
   } catch {
     grid.innerHTML = '<p style="color:#e74c3c">Could not load fleet. Please call 207-245-0080.</p>';
   }
 }
 
+function renderCarGrid(fleet) {
+  const grid = document.getElementById('carSelectGrid');
+  if (!fleet.length) { grid.innerHTML = '<p class="no-results">No vehicles match your search.</p>'; return; }
+  grid.innerHTML = fleet.map((car, i) => `
+    <div class="car-select-card ${selectedCar?.id === car.id ? 'selected' : ''}" id="car-${car.id}" onclick="selectCar(${JSON.stringify(car).replace(/"/g,'&quot;')})">
+      <div class="car-badge">${car.category}</div>
+      <div class="selected-tag">&#10003; Selected</div>
+      <img src="${car.image_url || 'images/fleet-card.png'}" alt="${car.year} ${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'"/>
+      <div class="car-select-info">
+        <div class="car-select-year">${car.year}</div>
+        <h4>${car.make} ${car.model}</h4>
+        <ul class="car-select-features">
+          ${(car.features || []).slice(0,3).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+        </ul>
+        <div class="car-select-footer">
+          <div class="car-select-price">From <strong>$${car.price}</strong>/day</div>
+          <button class="car-select-btn">${selectedCar?.id === car.id ? '&#10003; Selected' : 'Select'}</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterCars() {
+  const q = document.getElementById('carSearch').value.toLowerCase().trim();
+  renderCarGrid(!q ? allFleet : allFleet.filter(c =>
+    `${c.year} ${c.make} ${c.model} ${c.category}`.toLowerCase().includes(q)
+  ));
+}
+
 async function selectCar(car) {
   selectedCar = car;
-  document.querySelectorAll('.car-select-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById(`car-${car.id}`)?.classList.add('selected');
+  renderCarGrid(allFleet);
   bookedRanges = [];
   try {
     const res = await fetch(`${API_URL}/bookings/availability/${car.id}`);
@@ -42,6 +65,7 @@ async function selectCar(car) {
   calMonth = now.getMonth();
   renderCalendar();
   updateSummary();
+  document.querySelector('.bpage-card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── PICKUP ────────────────────────────────────────────────
