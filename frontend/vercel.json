@@ -10,7 +10,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*)\.html",
+      "source": "/(.*).html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
         { "key": "Pragma", "value": "no-cache" },
@@ -18,13 +18,13 @@
       ]
     },
     {
-      "source": "/(.*)\.js",
+      "source": "/(.*).js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     },
     {
-      "source": "/(.*)\.css",
+      "source": "/(.*).css",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
