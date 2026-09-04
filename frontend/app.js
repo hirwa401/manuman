@@ -246,7 +246,7 @@ async function loadFleet(attempt = 1) {
           </ul>
           <div class="car-footer">
             <div class="car-price">From <strong>$${car.price}</strong>/day</div>
-            <button class="btn-secondary" onclick='openBookingModal(${JSON.stringify(car)})'>Book Now</button>
+            <button class="btn-secondary" onclick='window.location.href="booking.html?car="+encodeURIComponent(car.id)'>Book Now</button>
           </div>
         </div>
       </div>`).join('');

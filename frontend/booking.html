@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book a Car — ManuMan Mobility</title>
+  <link rel="icon" type="image/jpeg" href="images/logo.jpeg"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .booking-page { background: #f4f6f9; min-height: 100vh; padding: 100px 24px 60px; }
+    .booking-page-inner { max-width: 860px; margin: 0 auto; }
+    .booking-page-header { text-align: center; margin-bottom: 40px; }
+    .booking-page-header h1 { font-size: 2.2rem; font-weight: 900; color: #0d1b2a; margin-bottom: 8px; }
+    .booking-page-header p { color: #666; font-size: 1rem; }
+    .booking-page-header h1::after { content:''; display:block; width:56px; height:4px; background:#F5A800; margin:12px auto 0; border-radius:2px; }
+    .bpage-card { background: #fff; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 36px 40px; margin-bottom: 24px; }
+    .bpage-card h2 { font-size: 1.1rem; font-weight: 800; color: #0d1b2a; margin-bottom: 20px; display:flex; align-items:center; gap:10px; }
+    .bpage-card h2 i { color: #F5A800; }
+    .bpage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .bpage-group { display: flex; flex-direction: column; gap: 6px; }
+    .bpage-group.full { grid-column: 1 / -1; }
+    .bpage-group label { font-size: 0.78rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .bpage-group label i { color: #F5A800; margin-right: 4px; }
+    .bpage-group input, .bpage-group select, .bpage-group textarea {
+      border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 12px 14px;
+      font-size: 0.95rem; outline: none; font-family: inherit;
+      transition: border-color 0.2s; background: #fff;
+    }
+    .bpage-group input:focus, .bpage-group select:focus { border-color: #F5A800; }
+    .pickup-toggle { display: flex; gap: 8px; }
+    .pickup-opt { flex:1; padding:11px 12px; border:1.5px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:0.85rem; font-family:inherit; color:#555; transition:all 0.2s; text-align:center; }
+    .pickup-opt.active { border-color:#F5A800; background:#fff8e6; color:#333; font-weight:600; }
+    .pickup-free { background:#2ecc71; color:#fff; border-radius:4px; padding:1px 6px; font-size:0.75rem; margin-left:4px; }
+    .pickup-fee { background:#e67e22; color:#fff; border-radius:4px; padding:1px 6px; font-size:0.75rem; margin-left:4px; }
+    .car-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .car-select-card { border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+    .car-select-card:hover { border-color: #F5A800; }
+    .car-select-card.selected { border-color: #F5A800; box-shadow: 0 0 0 3px rgba(245,168,0,0.2); }
+    .car-select-card img { width:100%; height:130px; object-fit:cover; }
+    .car-select-info { padding: 12px; }
+    .car-select-info h4 { font-size: 0.9rem; font-weight: 800; color: #0d1b2a; margin-bottom: 4px; }
+    .car-select-info span { font-size: 0.82rem; color: #F5A800; font-weight: 700; }
+    .car-select-check { display:none; }
+    .bpage-summary { background: #0d1b2a; border-radius: 10px; padding: 20px 24px; }
+    .bpage-summary-row { display:flex; justify-content:space-between; color:rgba(255,255,255,0.7); font-size:0.88rem; margin-bottom:8px; }
+    .bpage-summary-row strong { color:#fff; }
+    .bpage-summary-row.total { border-top:1px solid rgba(255,255,255,0.15); padding-top:10px; margin-top:4px; }
+    .bpage-summary-row.total span { color:#fff; font-weight:700; }
+    .bpage-summary-row.total strong { color:#F5A800; font-size:1.2rem; }
+    .bpage-error { color: #e53935; font-size: 0.85rem; min-height: 18px; margin-bottom: 8px; }
+    .bpage-submit { width:100%; padding:16px; background:#F5A800; border:none; border-radius:10px; font-size:1rem; font-weight:800; color:#0d1b2a; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; justify-content:center; gap:10px; }
+    .bpage-submit:hover { background:#d4900a; }
+    .bpage-submit:disabled { opacity:0.6; cursor:not-allowed; }
+    .terms-box { border:1px solid #e6d8ab; border-radius:10px; background:#fffaf0; padding:14px 16px; }
+    .terms-checkbox { display:flex; gap:10px; align-items:flex-start; font-size:0.88rem; color:#3a3a3a; line-height:1.5; }
+    .terms-checkbox input { margin-top:3px; width:16px; height:16px; accent-color:#F5A800; }
+    .terms-checkbox a { color:#0d1b2a; font-weight:700; text-decoration:underline; }
+    .avail-calendar { background:#f9f9f9; border:1.5px solid #e0e0e0; border-radius:10px; padding:14px; user-select:none; }
+    .avail-cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .avail-cal-nav span { font-weight:700; font-size:0.95rem; color:#0d1b2a; }
+    .avail-cal-nav button { background:none; border:1.5px solid #ddd; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:0.8rem; color:#555; display:flex; align-items:center; justify-content:center; }
+    .avail-cal-nav button:hover { border-color:#F5A800; color:#F5A800; }
+    .avail-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
+    .cal-day-name { text-align:center; font-size:0.72rem; font-weight:700; color:#888; padding:4px 0; }
+    .avail-cal-days { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .cal-day { text-align:center; padding:7px 2px; border-radius:6px; font-size:0.82rem; cursor:pointer; transition:all 0.15s; color:#333; }
+    .cal-day:hover:not(.cal-booked):not(.cal-past):not(.cal-empty) { background:#F5A800; color:#fff; }
+    .cal-day.cal-empty { cursor:default; }
+    .cal-day.cal-past { color:#ccc; cursor:not-allowed; }
+    .cal-day.cal-booked { background:#ffebee; color:#e53935; cursor:not-allowed; font-weight:600; }
+    .cal-day.cal-today { border:2px solid #F5A800; font-weight:700; }
+    .cal-day.cal-selected-start, .cal-day.cal-selected-end { background:#F5A800; color:#fff; font-weight:700; }
+    .cal-day.cal-selected-range { background:#fff3cd; color:#333; }
+    .avail-cal-legend { display:flex; gap:14px; margin-top:10px; font-size:0.75rem; color:#666; flex-wrap:wrap; }
+    .leg-dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; }
+    .leg-avail { background:#e8f5e9; border:1px solid #a5d6a7; }
+    .leg-booked { background:#ffebee; border:1px solid #ef9a9a; }
+    .leg-selected { background:#F5A800; }
+    @media (max-width: 600px) {
+      .bpage-card { padding: 24px 18px; }
+      .bpage-grid { grid-template-columns: 1fr; }
+      .bpage-group.full { grid-column: 1; }
+      .car-select-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo"><img src="images/logo.jpeg" alt="ManuMan Mobility"/></a>
+      <a href="index.html" style="color:rgba(255,255,255,0.7);font-size:0.9rem;display:flex;align-items:center;gap:6px;">
+        <i class="fas fa-arrow-left"></i> Back to Home
+      </a>
+    </div>
+  </nav>
+
+  <div class="booking-page">
+    <div class="booking-page-inner">
+      <div class="booking-page-header">
+        <h1>Book Your Car</h1>
+        <p>Fill in your details below and we'll confirm your reservation</p>
+      </div>
+
+      <!-- STEP 1: Choose Car -->
+      <div class="bpage-card">
+        <h2><i class="fas fa-car"></i> Choose Your Vehicle</h2>
+        <div class="car-select-grid" id="carSelectGrid">
+          <p style="color:#aaa">Loading fleet...</p>
+        </div>
+      </div>
+
+      <!-- STEP 2: Dates & Pickup -->
+      <div class="bpage-card">
+        <h2><i class="fas fa-calendar-alt"></i> Dates & Pick-up</h2>
+        <div class="bpage-grid">
+          <div class="bpage-group full">
+            <label><i class="fas fa-map-marker-alt"></i> Pick-up Location</label>
+            <div class="pickup-toggle">
+              <button type="button" class="pickup-opt active" id="pickupHQ" onclick="setPickupHQ()">
+                <i class="fas fa-building"></i> Headquarters <span class="pickup-free">Free</span>
+              </button>
+              <button type="button" class="pickup-opt" id="pickupCustom" onclick="setPickupCustom()">
+                <i class="fas fa-map-marker-alt"></i> Custom Location <span class="pickup-fee">+$100</span>
+              </button>
+            </div>
+            <input type="text" id="bPickup" placeholder="Enter delivery address" oninput="updateSummary()" style="display:none;margin-top:8px"/>
+          </div>
+          <div class="bpage-group full">
+            <label><i class="fas fa-calendar-alt"></i> Availability Calendar</label>
+            <div class="avail-calendar" id="availCalendar">
+              <div class="avail-cal-nav">
+                <button onclick="calPrev()" type="button"><i class="fas fa-chevron-left"></i></button>
+                <span id="calMonthLabel"></span>
+                <button onclick="calNext()" type="button"><i class="fas fa-chevron-right"></i></button>
+              </div>
+              <div class="avail-cal-grid">
+                <div class="cal-day-name">Su</div><div class="cal-day-name">Mo</div><div class="cal-day-name">Tu</div>
+                <div class="cal-day-name">We</div><div class="cal-day-name">Th</div><div class="cal-day-name">Fr</div><div class="cal-day-name">Sa</div>
+              </div>
+              <div class="avail-cal-days" id="calDays"></div>
+              <div class="avail-cal-legend">
+                <span><i class="leg-dot leg-avail"></i> Available</span>
+                <span><i class="leg-dot leg-booked"></i> Booked</span>
+                <span><i class="leg-dot leg-selected"></i> Selected</span>
+              </div>
+            </div>
+          </div>
+          <div class="bpage-group">
+            <label><i class="fas fa-calendar-alt"></i> Pick-up Date</label>
+            <input type="date" id="bPickupDate" onchange="updateSummary();renderCalendar()"/>
+          </div>
+          <div class="bpage-group">
+            <label><i class="fas fa-calendar-check"></i> Return Date</label>
+            <input type="date" id="bReturnDate" onchange="updateSummary();renderCalendar()"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Customer Info -->
+      <div class="bpage-card">
+        <h2><i class="fas fa-user"></i> Your Details</h2>
+        <div class="bpage-grid">
+          <div class="bpage-group">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" id="bName" placeholder="John Doe"/>
+          </div>
+          <div class="bpage-group">
+            <label><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" id="bEmail" placeholder="you@email.com"/>
+          </div>
+          <div class="bpage-group">
+            <label><i class="fas fa-phone"></i> Phone</label>
+            <input type="tel" id="bPhone" placeholder="207-000-0000"/>
+          </div>
+          <div class="bpage-group">
+            <label><i class="fas fa-id-card"></i> Driver's License / ID Number</label>
+            <input type="text" id="bDriverLicense" placeholder="License or state ID number"/>
+          </div>
+          <div class="bpage-group full">
+            <label><i class="fas fa-camera"></i> Driver's License Photo</label>
+            <input type="file" id="bDriverLicenseImage" accept="image/*" capture="environment" required style="border:1.5px solid #e0e0e0;border-radius:8px;padding:10px;font-size:0.88rem"/>
+            <small style="color:#888;margin-top:4px;line-height:1.5">Upload a clear photo of your driver's license or government ID. Required before booking.</small>
+          </div>
+          <div class="bpage-group full">
+            <div class="terms-box">
+              <label class="terms-checkbox">
+                <input type="checkbox" id="bTermsAccepted"/>
+                <span>I confirm I am at least 21 years old, hold a valid driver's license, and agree to the <a href="#" onclick="toggleTerms();return false;">Terms &amp; Conditions</a>.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="bpage-card" id="summaryCard" style="display:none">
+        <h2><i class="fas fa-receipt"></i> Booking Summary</h2>
+        <div class="bpage-summary">
+          <div class="bpage-summary-row"><span>Vehicle</span><strong id="sumVehicle">—</strong></div>
+          <div class="bpage-summary-row"><span>Duration</span><strong id="sumDays">—</strong></div>
+          <div class="bpage-summary-row"><span>Rate</span><strong id="sumRate">—</strong></div>
+          <div class="bpage-summary-row" id="sumDeliveryRow" style="display:none"><span>Delivery Fee</span><strong style="color:#e65100">+$100</strong></div>
+          <div class="bpage-summary-row total"><span>Total</span><strong id="sumTotal">—</strong></div>
+        </div>
+      </div>
+
+      <div class="bpage-error" id="bPageError"></div>
+      <button class="bpage-submit" id="bPageSubmit" onclick="submitBookingPage()">
+        <i class="fas fa-lock"></i> Continue to Payment
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="config.js"></script>
+  <script src="bookingValidation.js"></script>
+  <script src="booking.js"></script>
+</body>
+</html>
