@@ -7,7 +7,6 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
-app.use(express.raw({ type: 'image/*' }));
 app.use(express.json());
 
 const supabase = createClient(
@@ -65,36 +64,29 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────
-app.post('/api/upload', async (req, res) => {
+app.post('/api/upload', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
   try {
     const contentType = req.headers['content-type'] || '';
-    const bucketName = req.body?.bucket || req.query?.bucket || 'car-images';
+    const bucketName = 'car-images';
 
-    if (contentType.startsWith('application/json')) {
-      const { image, contentType: ct, bucket } = req.body;
-      if (!image) return res.status(400).json({ message: 'No image provided.' });
-      const buffer = Buffer.from(image, 'base64');
-      const ext = (ct || 'image/jpeg').split('/')[1]?.split(';')[0] || 'jpeg';
-      const filename = `${bucket || bucketName}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from(bucket || bucketName).upload(filename, buffer, { contentType: ct || 'image/jpeg', upsert: true });
-      if (error) return res.status(500).json({ message: error.message });
-      const { data } = supabase.storage.from(bucket || bucketName).getPublicUrl(filename);
-      res.json({ url: data.publicUrl });
+    let buffer, ext, ct;
+    if (contentType.includes('application/json')) {
+      const body = JSON.parse(req.body.toString());
+      if (!body.image) return res.status(400).json({ message: 'No image provided.' });
+      buffer = Buffer.from(body.image, 'base64');
+      ct = body.contentType || 'image/jpeg';
+      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
     } else {
-      const chunks = [];
-      req.on('data', chunk => chunks.push(chunk));
-      req.on('end', async () => {
-        try {
-          const buffer = Buffer.concat(chunks);
-          const ext = contentType.split('/')[1]?.split(';')[0] || 'jpeg';
-          const filename = `${bucketName}-${Date.now()}.${ext}`;
-          const { error } = await supabase.storage.from(bucketName).upload(filename, buffer, { contentType, upsert: true });
-          if (error) return res.status(500).json({ message: error.message });
-          const { data } = supabase.storage.from(bucketName).getPublicUrl(filename);
-          res.json({ url: data.publicUrl });
-        } catch (e) { res.status(500).json({ message: e.message }); }
-      });
+      buffer = req.body;
+      ct = contentType;
+      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
     }
+
+    const filename = `${bucketName}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(bucketName).upload(filename, buffer, { contentType: ct, upsert: true });
+    if (error) return res.status(500).json({ message: error.message });
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(filename);
+    res.json({ url: data.publicUrl });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 

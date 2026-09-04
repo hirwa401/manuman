@@ -60,15 +60,40 @@ export default function FleetScreen() {
       Alert.alert('Missing fields', 'Year, make, model and price are required.'); return;
     }
     setSaving(true);
-    const payload = {
-      ...form,
-      price: Number(form.price),
-      features: form.features ? form.features.split(',').map(f => f.trim()).filter(Boolean) : [],
-      interior_images: form.interior_images ? form.interior_images.split(',').map(u => u.trim()).filter(Boolean) : [],
-    };
-    if (editing) await api.put(`/fleet/${editing}`, payload);
-    else await api.post('/fleet', payload);
-    setSaving(false); setEditModal(false); load();
+    try {
+      // Upload exterior if a new local image was picked
+      let image_url = form.image_url || '';
+      if (exteriorPreview?.base64) {
+        image_url = await uploadImage(exteriorPreview.base64, 'image/jpeg');
+      }
+
+      // Upload any interior images that are still local (have base64)
+      const uploadedInterior = [];
+      for (const prev of interiorPreviews) {
+        if (prev.base64) {
+          const url = await uploadImage(prev.base64, 'image/jpeg');
+          uploadedInterior.push(url);
+        } else {
+          uploadedInterior.push(prev.uri);
+        }
+      }
+
+      const payload = {
+        ...form,
+        image_url,
+        price: Number(form.price),
+        features: form.features ? form.features.split(',').map(f => f.trim()).filter(Boolean) : [],
+        interior_images: uploadedInterior,
+      };
+      if (editing) await api.put(`/fleet/${editing}`, payload);
+      else await api.post('/fleet', payload);
+      setEditModal(false);
+      load();
+    } catch (e) {
+      Alert.alert('Save failed', e.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function deleteCar(id) {
