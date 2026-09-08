@@ -1,5 +1,5 @@
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
+  ? 'http://localhost:3001/api'
   : 'https://manuman-api.vercel.app/api';
 
 const SUPABASE_URL = 'https://itdqaekjtojpksrgijfn.supabase.co';
