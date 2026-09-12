@@ -235,8 +235,21 @@ function setPickupCustom() {
 // ── NAV ───────────────────────────────────────────────────
 const navToggle = document.getElementById('navToggle');
 const navLinks = document.getElementById('navLinks');
+let navCloseTimer;
 navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+navToggle.addEventListener('mouseenter', () => {
+  clearTimeout(navCloseTimer);
+  navLinks.classList.add('open');
+});
+navLinks.addEventListener('mouseenter', () => clearTimeout(navCloseTimer));
+navToggle.addEventListener('mouseleave', scheduleNavClose);
+navLinks.addEventListener('mouseleave', scheduleNavClose);
 navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+function scheduleNavClose() {
+  clearTimeout(navCloseTimer);
+  navCloseTimer = setTimeout(() => navLinks.classList.remove('open'), 180);
+}
 
 window.addEventListener('scroll', () => {
   document.querySelector('.navbar').style.boxShadow =
