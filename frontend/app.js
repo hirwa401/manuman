@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // caption
     const caption = document.getElementById('galleryCaption');
     if (caption) caption.textContent = `${car.year} ${car.make} ${car.model}`;
-    const thumbs = document.getElementById('galleryThumbs'); thumbs.innerHTML = '';
+    const thumbs = document.getElementById('galleryThumbs');
+    thumbs.innerHTML = '';
+    thumbs.style.gap = '16px';
     galleryImages.forEach((src, i) => {
       const t = document.createElement('img');
       t.src = src; t.style.width = '96px'; t.style.height = '64px'; t.style.objectFit='cover'; t.style.cursor='pointer'; t.style.borderRadius='6px';
