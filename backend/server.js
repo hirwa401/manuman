@@ -27,37 +27,178 @@ async function requireAuth(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-password'] !== process.env.ADMIN_PASSWORD)
+    return res.status(401).json({ message: 'Admin access required.' });
+  next();
+}
+
 async function requireHost(req, res, next) {
   await requireAuth(req, res, async () => {
-    const { data } = await supabase.from('profiles').select('role').eq('id', req.user.id).single();
-    if (!data || !['host', 'admin'].includes(data.role))
-      return res.status(403).json({ message: 'Host access required.' });
-    req.role = data.role;
-    next();
+    try {
+      const { data } = await supabase.from('profiles').select('role').eq('id', req.user.id).single();
+      if (!data || !['host', 'admin'].includes(data.role))
+        return res.status(403).json({ message: 'Host access required.' });
+      req.role = data.role;
+      next();
+    } catch (error) {
+      const message = error?.message || 'Database setup incomplete.';
+      if (String(message).includes('profiles') || String(message).includes('schema cache')) {
+        return res.status(500).json({
+          message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+        });
+      }
+      return res.status(500).json({ message });
+    }
   });
 }
 
 // ── HEALTH CHECK ──────────────────────────────────────────
+app.get('/', (req, res) => res.json({
+  status: 'ok',
+  service: 'manuman-backend',
+  message: 'API is running. Use /api/health or /api/ping for status checks.',
+  routes: ['/api/health', '/api/ping', '/api/fleet', '/api/bookings']
+}));
+app.get('/api', (req, res) => res.json({
+  status: 'ok',
+  service: 'manuman-backend',
+  message: 'API is running. Use /api/health or /api/ping for status checks.',
+  routes: ['/api/health', '/api/ping', '/api/fleet', '/api/bookings']
+}));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/api/ping', (req, res) => res.json({ status: 'ok', ok: true, service: 'manuman-backend' }));
 
 app.get('/api/profile', requireAuth, async (req, res) => {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', req.user.id).single();
-  if (error) return res.status(500).json({ message: error.message });
-  res.json(data);
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', req.user.id).single();
+    if (error) {
+      if (String(error.message).includes('profiles') || String(error.message).includes('schema cache')) {
+        return res.status(500).json({
+          message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+        });
+      }
+      return res.status(500).json({ message: error.message });
+    }
+    res.json(data);
+  } catch (error) {
+    const message = error?.message || 'Database setup incomplete.';
+    if (String(message).includes('profiles') || String(message).includes('schema cache')) {
+      return res.status(500).json({
+        message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+      });
+    }
+    return res.status(500).json({ message });
+  }
 });
 
 app.patch('/api/profile', requireAuth, async (req, res) => {
-  const { full_name, phone } = req.body;
-  const { data, error } = await supabase.from('profiles').update({ full_name, phone }).eq('id', req.user.id).select().single();
+  try {
+    const { full_name, phone } = req.body;
+    const { data, error } = await supabase.from('profiles').update({ full_name, phone }).eq('id', req.user.id).select().single();
+    if (error) {
+      if (String(error.message).includes('profiles') || String(error.message).includes('schema cache')) {
+        return res.status(500).json({
+          message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+        });
+      }
+      return res.status(500).json({ message: error.message });
+    }
+    res.json(data);
+  } catch (error) {
+    const message = error?.message || 'Database setup incomplete.';
+    if (String(message).includes('profiles') || String(message).includes('schema cache')) {
+      return res.status(500).json({
+        message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+      });
+    }
+    return res.status(500).json({ message });
+  }
+});
+
+app.post('/api/become-host', requireAuth, async (req, res) => {
+  try {
+    const { driverLicense, phone, location, termsAccepted } = req.body;
+    if (!driverLicense || !phone || !location || termsAccepted !== true) {
+      return res.status(400).json({ message: 'Driver license number, phone number, location, and host policy agreement are required.' });
+    }
+    const { data: profile, error: profileError } = await supabase.from('profiles').upsert({
+      id: req.user.id,
+      full_name: req.user.user_metadata?.full_name || req.user.email?.split('@')[0] || '',
+      role: 'customer'
+    }, { onConflict: 'id' }).select().single();
+    if (profileError) {
+      if (String(profileError.message).includes('profiles') || String(profileError.message).includes('schema cache')) {
+        return res.status(500).json({
+          message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+        });
+      }
+      return res.status(500).json({ message: profileError.message });
+    }
+
+    if (['host', 'admin'].includes(profile.role)) {
+      return res.json({ message: 'You already have host access.', profile });
+    }
+
+    const { data: existing } = await supabase.from('host_requests')
+      .select('*').eq('user_id', req.user.id).eq('status', 'pending').maybeSingle();
+    if (existing) return res.json({ message: 'Your host application is already pending admin review.', request: existing });
+
+    const { data, error } = await supabase.from('host_requests')
+      .insert({
+        user_id: req.user.id,
+        email: req.user.email || '',
+        driver_license: driverLicense.trim(),
+        phone: phone.trim(),
+        location: location.trim(),
+        terms_accepted: true,
+        terms_version: 'host-v1',
+        status: 'pending'
+      }).select().single();
+    if (error) return res.status(500).json({ message: error.message });
+    res.status(201).json({ message: 'Your host application was sent for admin review.', request: data });
+  } catch (error) {
+    const message = error?.message || 'Database setup incomplete.';
+    if (String(message).includes('profiles') || String(message).includes('schema cache')) {
+      return res.status(500).json({
+        message: 'Database setup incomplete: please run the SQL in backend/supabase_setup.sql to create the public.profiles table.'
+      });
+    }
+    return res.status(500).json({ message });
+  }
+});
+
+app.get('/api/host-request', requireAuth, async (req, res) => {
+  const { data, error } = await supabase.from('host_requests').select('*')
+    .eq('user_id', req.user.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data || { status: 'none' });
+});
+
+app.get('/api/host-requests', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('host_requests')
+    .select('*, profiles(id, full_name, role)').eq('status', 'pending').order('created_at');
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
 
-app.post('/api/become-host', requireAuth, async (req, res) => {
-  const { data, error } = await supabase.from('profiles').update({ role: 'host' }).eq('id', req.user.id).select().single();
+app.patch('/api/host-requests/:id/approve', requireAdmin, async (req, res) => {
+  const { data: request, error: requestError } = await supabase.from('host_requests')
+    .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+    .eq('id', req.params.id).eq('status', 'pending').select().single();
+  if (requestError) return res.status(500).json({ message: requestError.message });
+  const { data: profile, error: profileError } = await supabase.from('profiles')
+    .update({ role: 'host' }).eq('id', request.user_id).select().single();
+  if (profileError) return res.status(500).json({ message: profileError.message });
+  res.json({ request, profile });
+});
+
+app.patch('/api/host-requests/:id/reject', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('host_requests')
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+    .eq('id', req.params.id).eq('status', 'pending').select().single();
   if (error) return res.status(500).json({ message: error.message });
-  res.json({ message: 'You are now a host!', profile: data });
+  res.json(data);
 });
 
 // ── STRIPE PAYMENT INTENT ─────────────────────────────────

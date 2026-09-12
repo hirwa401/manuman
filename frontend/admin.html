@@ -472,8 +472,12 @@
     <div class="section" id="section-hosts">
       <div class="table-card">
         <div class="table-header">
-          <h3>Pending Host Car Listings</h3>
+          <h3>Pending Host Applications</h3>
           <button class="refresh-btn" onclick="loadPendingCars()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div id="hostRequestsList" style="padding:16px"><p style="color:#888">Click refresh to load.</p></div>
+        <div class="table-header" style="border-top:1px solid #eee">
+          <h3>Pending Host Car Listings</h3>
         </div>
         <div id="pendingCarsList" style="padding:16px"><p style="color:#888">Click refresh to load.</p></div>
       </div>
@@ -578,6 +582,7 @@
       const data = await res.json();
       if (data.success) {
         sessionStorage.setItem('adminAuth', 'true');
+        sessionStorage.setItem('adminPassword', pw);
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadAll();
@@ -591,7 +596,12 @@
 
   function logout() {
     sessionStorage.removeItem('adminAuth');
+    sessionStorage.removeItem('adminPassword');
     location.reload();
+  }
+
+  function adminHeaders() {
+    return { 'X-Admin-Password': sessionStorage.getItem('adminPassword') || '' };
   }
 
   // Auto-restore session
@@ -608,7 +618,8 @@
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
     document.getElementById(`section-${name}`).classList.add('active');
-    document.querySelectorAll('.sidebar nav a')[['overview','bookings','contacts','fleet'].indexOf(name)].classList.add('active');
+    const navIndex = ['overview','bookings','contacts','fleet'].indexOf(name);
+    if (navIndex >= 0) document.querySelectorAll('.sidebar nav a')[navIndex].classList.add('active');
     document.getElementById('pageTitle').textContent = titles[name] || name;
     if (name === 'bookings') loadBookings();
     if (name === 'contacts') loadContacts();
@@ -920,6 +931,27 @@
 
   async function loadPendingCars() {
     try {
+      const requestsResponse = await fetch(`${API}/host-requests`, { headers: adminHeaders() });
+      const requests = requestsResponse.ok ? await requestsResponse.json() : [];
+      const requestsEl = document.getElementById('hostRequestsList');
+      if (!requests.length) {
+        requestsEl.innerHTML = '<p style="color:#888">No pending host applications.</p>';
+      } else {
+        requestsEl.innerHTML = requests.map(request => {
+          const profile = request.profiles || {};
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0">
+            <div><strong>${profile.full_name || 'Unnamed applicant'}</strong><br/>
+              <span style="color:#888;font-size:0.82rem">${request.email || 'No email'} · ${request.phone || 'No phone'} · ${request.location || 'No location'} · Applied ${timeAgo(request.created_at)}</span><br/>
+              <span style="color:#888;font-size:0.82rem">License: ${request.driver_license || 'Not provided'} · Terms accepted: ${request.terms_accepted ? 'Yes' : 'No'}</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="action-btn" style="background:#2ecc71;color:#fff" onclick="approveHostRequest('${request.id}')"><i class="fas fa-check"></i> Approve</button>
+              <button class="action-btn btn-delete" onclick="rejectHostRequest('${request.id}')"><i class="fas fa-times"></i> Reject</button>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
       const res = await fetch(`${API}/fleet?all=1`);
       // fetch all including unapproved via admin — use service key workaround via direct supabase not available here
       // Instead fetch all fleet (approved only) and pending separately
@@ -940,6 +972,19 @@
 
   async function approveCar(id) {
     await fetch(`${API}/fleet/${id}/approve`, { method: 'PATCH' });
+    loadPendingCars();
+  }
+
+  async function approveHostRequest(id) {
+    const response = await fetch(`${API}/host-requests/${id}/approve`, { method: 'PATCH', headers: adminHeaders() });
+    if (!response.ok) return alert('Could not approve host application.');
+    loadPendingCars();
+  }
+
+  async function rejectHostRequest(id) {
+    if (!confirm('Reject this host application?')) return;
+    const response = await fetch(`${API}/host-requests/${id}/reject`, { method: 'PATCH', headers: adminHeaders() });
+    if (!response.ok) return alert('Could not reject host application.');
     loadPendingCars();
   }
 

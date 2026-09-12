@@ -647,6 +647,37 @@
     </div>
   </div>
 
+  <!-- HOST APPLICATION MODAL -->
+  <div class="modal-overlay" id="hostApplicationModal">
+    <div class="auth-modal" style="max-width:560px">
+      <button class="bmodal-close" onclick="closeHostApplication()"><i class="fas fa-times"></i></button>
+      <div class="auth-logo"><img src="images/logo.jpeg" alt="logo" /></div>
+      <div id="hostApplicationForm">
+        <h3>Apply to Become a Host</h3>
+        <p class="auth-sub">Your application will be reviewed by ManuMan Mobility before host access is granted.</p>
+        <div class="bform-group"><label>Driver's License Number</label><input type="text" id="hostDriverLicense" autocomplete="off" placeholder="Enter your license number" /></div>
+        <div class="bform-group"><label>Phone Number</label><input type="tel" id="hostPhone" autocomplete="tel" placeholder="207-000-0000" /></div>
+        <div class="bform-group"><label>Location</label><input type="text" id="hostLocation" autocomplete="street-address" placeholder="City, State" /></div>
+        <label class="terms-checkbox" style="display:flex;gap:8px;align-items:flex-start;margin:14px 0">
+          <input type="checkbox" id="hostTermsAccepted" />
+          <span>I agree to the <a href="#" onclick="toggleHostPolicy();return false;">Host Terms and Policy</a>, including providing accurate information and maintaining safe, legal rental vehicles.</span>
+        </label>
+        <div class="terms-policy" id="hostPolicy" style="display:none;max-height:150px;overflow:auto;margin-bottom:14px">
+          <h4>Host Terms and Policy</h4>
+          <p>Hosts must provide accurate identity and contact information, maintain safe and legally compliant vehicles, and follow all applicable rental, insurance, and safety requirements. ManuMan Mobility may reject or remove a host who provides false information or violates these requirements.</p>
+        </div>
+        <div class="auth-error" id="hostApplicationError"></div>
+        <button class="btn-primary bmodal-btn" onclick="submitHostApplication()">Submit for Review</button>
+      </div>
+      <div id="hostApplicationSuccess" style="display:none">
+        <div class="success-icon"><i class="fas fa-clock"></i></div>
+        <h3>Application Submitted</h3>
+        <p class="auth-sub">Your application is pending admin review. You will receive host access after approval.</p>
+        <button class="btn-primary bmodal-btn" onclick="closeHostApplication()">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MY BOOKINGS MODAL -->
   <div class="modal-overlay" id="myBookingsModal">
     <div class="auth-modal" style="max-width:640px">

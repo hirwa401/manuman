@@ -84,6 +84,15 @@ function updateNavAuth() {
         if (p.role === 'host' || p.role === 'admin') {
           hostLink.style.display = 'block';
           becomeHostLink.style.display = 'none';
+        } else {
+          fetch(`${API}/host-request`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.ok ? r.json() : null).then(request => {
+              if (request?.status === 'pending') {
+                becomeHostLink.innerHTML = '<i class="fas fa-clock"></i> Host application pending';
+                becomeHostLink.style.pointerEvents = 'none';
+                becomeHostLink.style.opacity = '0.6';
+              }
+            }).catch(() => {});
         }
       }).catch(() => {});
   } else {
@@ -95,6 +104,20 @@ function updateNavAuth() {
 async function getToken() {
   const { data: { session } } = await sbClient.auth.getSession();
   return session?.access_token || '';
+}
+
+function openHostApplication() {
+  if (!currentUser) { window.location.href = 'login.html'; return; }
+  document.getElementById('hostApplicationModal').style.display = 'flex';
+}
+
+function closeHostApplication() {
+  document.getElementById('hostApplicationModal').style.display = 'none';
+}
+
+function toggleHostPolicy() {
+  const policy = document.getElementById('hostPolicy');
+  policy.style.display = policy.style.display === 'none' ? 'block' : 'none';
 }
 
 function openAuthModal(tab = 'login') {
@@ -140,15 +163,33 @@ async function signOut() {
 }
 
 async function becomeHost() {
-  if (!currentUser) { window.location.href = 'login.html'; return; }
+  openHostApplication();
+}
+
+async function submitHostApplication() {
   const token = await getToken();
-  const res = await fetch(`${API}/become-host`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+  const error = document.getElementById('hostApplicationError');
+  error.textContent = '';
+  const driverLicense = document.getElementById('hostDriverLicense').value.trim();
+  const phone = document.getElementById('hostPhone').value.trim();
+  const location = document.getElementById('hostLocation').value.trim();
+  const termsAccepted = document.getElementById('hostTermsAccepted').checked;
+  if (!driverLicense || !phone || !location || !termsAccepted) {
+    error.textContent = 'Complete all fields and agree to the Host Terms and Policy.';
+    return;
+  }
+  const res = await fetch(`${API}/become-host`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ driverLicense, phone, location, termsAccepted })
+  });
   if (res.ok) {
-    alert('🎉 You are now a host! Redirecting to your dashboard.');
-    window.location.href = 'host.html';
+    document.getElementById('hostApplicationForm').style.display = 'none';
+    document.getElementById('hostApplicationSuccess').style.display = 'block';
+    updateNavAuth();
   } else {
     const d = await res.json();
-    alert(d.message);
+    error.textContent = d.message || 'Could not submit your host application.';
   }
 }
 
