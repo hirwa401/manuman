@@ -706,14 +706,31 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   const msg = document.getElementById('contactMsg');
   const data = Object.fromEntries(new FormData(e.target));
   try {
-    const res = await fetch(`${API}/contact`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (res.ok) {
+    const [formspreeResult, backendResult] = await Promise.allSettled([
+      fetch('https://formspree.io/f/mwlkjdev', {
+        method: 'POST',
+        body: new FormData(e.target),
+        headers: { Accept: 'application/json' }
+      }),
+      fetch(`${API}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+    ]);
+    const emailSent = formspreeResult.status === 'fulfilled' && formspreeResult.value.ok;
+    const adminSaved = backendResult.status === 'fulfilled' && backendResult.value.ok;
+    if (emailSent && adminSaved) {
       msg.style.color = 'green';
       msg.textContent = "✅ Message sent! We'll get back to you soon.";
+      e.target.reset();
+    } else if (emailSent) {
+      msg.style.color = '#b26a00';
+      msg.textContent = '✅ Email sent, but the admin dashboard could not save a copy.';
+      e.target.reset();
+    } else if (adminSaved) {
+      msg.style.color = '#b26a00';
+      msg.textContent = '✅ Saved in the admin dashboard, but the email could not be sent.';
       e.target.reset();
     } else {
       msg.style.color = 'red';

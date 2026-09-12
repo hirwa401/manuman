@@ -12,3 +12,9 @@ test('continue-to-payment button is wired to the payment action', () => {
     /continueToPaymentBtn.*goToPayment|goToPayment.*continueToPaymentBtn|addEventListener\(\s*['"]click['"]\s*,\s*goToPayment/
   );
 });
+
+test('contact form sends messages to Formspree and the admin backend', () => {
+  assert.match(appJs, /https:\/\/formspree\.io\/f\/mwlkjdev/);
+  assert.match(appJs, /fetch\(`\$\{API\}\/contact`/);
+  assert.match(appJs, /Promise\.allSettled/);
+});
