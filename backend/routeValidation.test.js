@@ -35,6 +35,12 @@ test('host approval endpoints require admin access', () => {
   assert.match(apiIndexJs, /host-requests.*requireAdmin/);
 });
 
+test('fleet host migration adds the host listing approval columns', () => {
+  const migration = fs.readFileSync('./backend/fleet_host_migration.sql', 'utf8');
+  assert.match(migration, /add column if not exists host_id/i);
+  assert.match(migration, /add column if not exists approved/i);
+});
+
 test('become-host route explains when the profiles table is missing', () => {
   assert.match(serverJs, /profiles table|schema cache|supabase_setup\.sql|Database setup incomplete/i);
 });
