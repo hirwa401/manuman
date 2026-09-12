@@ -799,6 +799,7 @@ img { max-width: 100%; display: block; }
     border-top: 1px solid rgba(245,168,0,0.3);
   }
   .nav-links.open { display: flex; }
+  .nav-links #navAuthBtn { margin-top: 10px; }
   .booking-form { flex-direction: column; }
   .form-group { min-width: 100%; }
   .trust-item { padding: 14px 18px; font-size: 0.82rem; }
