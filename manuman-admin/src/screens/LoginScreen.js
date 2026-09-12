@@ -25,7 +25,7 @@ export default function LoginScreen({ onLogin }) {
     <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={s.card}>
         <View style={s.logoWrap}>
-          <View style={s.logoBg}><Text style={s.logoIcon}>🚗</Text></View>
+          <View style={s.logoBg}><Image source={require('../../assets/icon.png')} style={s.logoImage} /></View>
         </View>
         <Text style={s.title}>ManuMan Admin</Text>
         <Text style={s.sub}>Sign in to manage your rental business</Text>
@@ -55,7 +55,7 @@ const s = StyleSheet.create({
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 32, alignItems: 'center' },
   logoWrap: { marginBottom: 16 },
   logoBg: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#F5A800', alignItems: 'center', justifyContent: 'center' },
-  logoIcon: { fontSize: 32 },
+  logoImage: { width: 72, height: 72, borderRadius: 36 },
   title: { fontSize: 22, fontWeight: '800', color: '#0d1b2a', marginBottom: 6 },
   sub: { fontSize: 13, color: '#888', marginBottom: 28, textAlign: 'center' },
   label: { alignSelf: 'flex-start', fontSize: 12, fontWeight: '700', color: '#555', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },

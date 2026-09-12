@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/iosandandroidapp.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d1b2a"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,

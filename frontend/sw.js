@@ -5,7 +5,8 @@ const STATIC = [
   '/style.css',
   '/app.js',
   '/config.js',
-  '/images/logo.jpeg',
+  '/images/mainsmalllogo.png',
+  '/images/websiteimage.png',
   '/images/fleet-card.png',
 ];
 

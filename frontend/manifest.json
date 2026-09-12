@@ -8,8 +8,8 @@
   "theme_color": "#0d1b2a",
   "orientation": "portrait",
   "icons": [
-    { "src": "images/logo.jpeg", "sizes": "192x192", "type": "image/jpeg" },
-    { "src": "images/logo.jpeg", "sizes": "512x512", "type": "image/jpeg" }
+    { "src": "images/mainsmalllogo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "images/mainsmalllogo.png", "sizes": "512x512", "type": "image/png" }
   ],
   "categories": ["travel", "business"],
   "shortcuts": [
