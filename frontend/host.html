@@ -120,7 +120,11 @@
           </select>
         </div>
         <div class="hform-group"><label>Price per Day ($)</label><input type="number" id="hPrice" placeholder="65"/></div>
-        <div class="hform-group"><label>Image URL</label><input type="text" id="hImageUrl" placeholder="https://..."/></div>
+        <div class="hform-group">
+          <label>Vehicle Image</label>
+          <input type="file" id="hImageFile" accept="image/*" onchange="previewHostImage(this)" />
+          <img id="hImagePreview" alt="Vehicle preview" style="display:none;width:100%;height:140px;object-fit:cover;border-radius:8px;margin-top:8px" />
+        </div>
         <div class="hform-group hform-full"><label>Features (comma separated)</label><input type="text" id="hFeatures" placeholder="Bluetooth, Backup Camera, GPS"/></div>
       </div>
       <div id="hAddError" class="host-error"></div>
@@ -229,10 +233,24 @@
     const model = document.getElementById('hModel').value.trim();
     const category = document.getElementById('hCategory').value;
     const price = document.getElementById('hPrice').value;
-    const image_url = document.getElementById('hImageUrl').value.trim();
+    const imageFile = document.getElementById('hImageFile').files[0];
     const featStr = document.getElementById('hFeatures').value.trim();
     const features = featStr ? featStr.split(',').map(f => f.trim()) : [];
-    if (!year || !make || !model || !price) { err.textContent = 'Please fill all required fields.'; return; }
+    if (!year || !make || !model || !price || !imageFile) { err.textContent = 'Please fill all required fields and choose a vehicle image.'; return; }
+    let image_url;
+    try {
+      const uploadResponse = await fetch(`${API}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': imageFile.type },
+        body: imageFile
+      });
+      const uploadData = await uploadResponse.json();
+      if (!uploadResponse.ok) throw new Error(uploadData.message || 'Image upload failed.');
+      image_url = uploadData.url;
+    } catch (uploadError) {
+      err.textContent = uploadError.message;
+      return;
+    }
     const res = await fetch(`${API}/host/fleet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${hostToken}` },
@@ -241,8 +259,20 @@
     const data = await res.json();
     if (!res.ok) { err.textContent = data.message; return; }
     suc.textContent = '✅ Car submitted! It will appear after admin approval.';
-    ['hYear','hMake','hModel','hPrice','hImageUrl','hFeatures'].forEach(id => document.getElementById(id).value = '');
+    ['hYear','hMake','hModel','hPrice','hImageFile','hFeatures'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('hImagePreview').style.display = 'none';
     loadHostCars();
+  }
+
+  function previewHostImage(input) {
+    const preview = document.getElementById('hImagePreview');
+    const file = input.files[0];
+    if (!file) {
+      preview.style.display = 'none';
+      return;
+    }
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
   }
 
   async function deleteHostCar(id) {
