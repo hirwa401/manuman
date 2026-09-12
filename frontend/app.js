@@ -6,6 +6,10 @@ let sbClient = null;
 let stripeInstance = null;
 let stripeCardElement = null;
 
+function bookCar(carId) {
+  window.location.assign(`booking.html?car=${encodeURIComponent(carId)}`);
+}
+
 // ── SUPABASE AUTH ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -231,25 +235,28 @@ async function loadFleet(attempt = 1) {
         select.appendChild(opt);
       });
     }
-    grid.innerHTML = fleet.map((car, i) => `
-      <div class="car-card ${i === 1 ? 'featured' : ''}">
-        <div class="car-badge">${car.category}</div>
-        ${i === 1 ? '<div class="featured-tag">Most Popular</div>' : ''}
-        <img src="${car.image_url || 'images/fleet-card.png'}" alt="${car.year} ${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'" />
-        <div class="car-info">
-          <div class="car-title">
-            <span class="car-year">${car.year}</span>
-            <h3>${car.make} ${car.model}</h3>
+      grid.innerHTML = fleet.map((car, i) => `
+        <div class="car-card ${i === 1 ? 'featured' : ''}">
+          <div class="car-badge">${car.category}</div>
+          ${i === 1 ? '<div class="featured-tag">Most Popular</div>' : ''}
+          <div class="car-image-wrap">
+            <img src="${car.image_url || 'images/fleet-card.png'}" alt="${car.year} ${car.make} ${car.model}" onerror="this.src='images/fleet-card.png'" />
+            ${(car.interior_images || []).length ? `<button class="interior-gallery-btn" type="button" onclick='event.stopPropagation(); openGallery(${JSON.stringify(car).replace(/'/g, '&#39;')})'><i class="fas fa-images"></i> Interior</button>` : ''}
           </div>
-          <ul class="car-features">
-            ${(car.features || []).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
-          </ul>
-          <div class="car-footer">
-            <div class="car-price">From <strong>$${car.price}</strong>/day</div>
-            <button class="btn-secondary" onclick='window.location.href="booking.html?car="+encodeURIComponent(car.id)'>Book Now</button>
+          <div class="car-info">
+            <div class="car-title">
+              <span class="car-year">${car.year}</span>
+              <h3>${car.make} ${car.model}</h3>
+            </div>
+            <ul class="car-features">
+              ${(car.features || []).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+            </ul>
+            <div class="car-footer">
+              <div class="car-price">From <strong>$${car.price}</strong>/day</div>
+              <button class="btn-secondary" type="button" onclick="bookCar('${car.id}')">Book Now</button>
+            </div>
           </div>
-        </div>
-      </div>`).join('');
+        </div>`).join('');
   } catch {
     if (attempt < 3) {
       setTimeout(() => loadFleet(attempt + 1), 2000);
@@ -493,6 +500,11 @@ function selectPayMethod(method) {
       document.getElementById('stripeCardError').textContent = e.error ? e.error.message : '';
     });
   }
+}
+
+const continueToPaymentBtn = document.getElementById('continueToPaymentBtn');
+if (continueToPaymentBtn) {
+  continueToPaymentBtn.addEventListener('click', goToPayment);
 }
 
 async function submitBooking() {

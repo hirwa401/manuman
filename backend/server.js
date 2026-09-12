@@ -3,10 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { errorLogger, registerProcessLogging, requestLogger } = require('./logger');
 
 const app = express();
+registerProcessLogging();
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
 app.use(express.json());
+app.use(requestLogger);
 
 // ── SUPABASE CLIENT ───────────────────────────────────────
 const supabase = createClient(
@@ -15,8 +18,47 @@ const supabase = createClient(
   { db: { schema: 'public' }, auth: { persistSession: false } }
 );
 
+async function requireAuth(req, res, next) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) return res.status(401).json({ message: 'Not authenticated.' });
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ message: 'Invalid or expired session.' });
+  req.user = user;
+  next();
+}
+
+async function requireHost(req, res, next) {
+  await requireAuth(req, res, async () => {
+    const { data } = await supabase.from('profiles').select('role').eq('id', req.user.id).single();
+    if (!data || !['host', 'admin'].includes(data.role))
+      return res.status(403).json({ message: 'Host access required.' });
+    req.role = data.role;
+    next();
+  });
+}
+
 // ── HEALTH CHECK ──────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/ping', (req, res) => res.json({ status: 'ok', ok: true, service: 'manuman-backend' }));
+
+app.get('/api/profile', requireAuth, async (req, res) => {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', req.user.id).single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.patch('/api/profile', requireAuth, async (req, res) => {
+  const { full_name, phone } = req.body;
+  const { data, error } = await supabase.from('profiles').update({ full_name, phone }).eq('id', req.user.id).select().single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.post('/api/become-host', requireAuth, async (req, res) => {
+  const { data, error } = await supabase.from('profiles').update({ role: 'host' }).eq('id', req.user.id).select().single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.json({ message: 'You are now a host!', profile: data });
+});
 
 // ── STRIPE PAYMENT INTENT ─────────────────────────────────
 app.post('/api/create-payment-intent', async (req, res) => {
@@ -45,24 +87,34 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────
-app.post('/api/upload', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+app.post('/api/upload', (req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.startsWith('image/')) {
+    express.raw({ type: 'image/*', limit: '10mb' })(req, res, next);
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
     const contentType = req.headers['content-type'] || '';
     const bucketName = 'car-images';
 
-    let buffer, ext, ct;
-    if (contentType.includes('application/json')) {
-      const body = JSON.parse(req.body.toString());
-      if (!body.image) return res.status(400).json({ message: 'No image provided.' });
-      buffer = Buffer.from(body.image, 'base64');
-      ct = body.contentType || 'image/jpeg';
-      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
-    } else {
+    let buffer, ct;
+    if (contentType.startsWith('image/')) {
       buffer = req.body;
       ct = contentType;
-      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
+    } else if (req.body && req.body.image) {
+      buffer = Buffer.from(req.body.image, 'base64');
+      ct = req.body.contentType || 'image/jpeg';
+    } else {
+      return res.status(400).json({ message: 'No image provided.' });
     }
 
+    if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+      return res.status(400).json({ message: 'Invalid image data.' });
+    }
+
+    const ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
     const filename = `${bucketName}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from(bucketName).upload(filename, buffer, { contentType: ct, upsert: true });
     if (error) return res.status(500).json({ message: error.message });
@@ -76,18 +128,35 @@ app.get('/api/fleet', async (req, res) => {
   res.json(data);
 });
 
+async function fleetWrite(operation, payload) {
+  const result = await operation(payload);
+  if (result.error && result.error.message.includes("interior_images")) {
+    const { interior_images, ...legacyPayload } = payload;
+    return operation(legacyPayload);
+  }
+  return result;
+}
+
 app.post('/api/fleet', async (req, res) => {
   const { year, make, model, category, price, image_url, features, interior_images } = req.body;
   if (!year || !make || !model || !category || !price)
     return res.status(400).json({ message: 'year, make, model, category and price are required.' });
-  const { data, error } = await supabase.from('fleet').insert([{ year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true }]).select().single();
+  const payload = { year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true };
+  const { data, error } = await fleetWrite(
+    values => supabase.from('fleet').insert([values]).select().single(),
+    payload
+  );
   if (error) return res.status(500).json({ message: error.message });
   res.status(201).json(data);
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
   const { year, make, model, category, price, image_url, features, available, interior_images } = req.body;
-  const { data, error } = await supabase.from('fleet').update({ year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] }).eq('id', req.params.id).select().single();
+  const payload = { year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] };
+  const { data, error } = await fleetWrite(
+    values => supabase.from('fleet').update(values).eq('id', req.params.id).select().single(),
+    payload
+  );
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
@@ -130,8 +199,63 @@ app.post('/api/bookings', async (req, res) => {
   res.status(201).json({ message: 'Booking created', booking: data });
 });
 
+app.get('/api/bookings/mine', requireAuth, async (req, res) => {
+  const { data, error } = await supabase.from('bookings').select('*').eq('user_id', req.user.id).order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
 app.get('/api/bookings', async (req, res) => {
   const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.get('/api/fleet/pending', async (req, res) => {
+  const { data, error } = await supabase.from('fleet').select('*').eq('approved', false).order('created_at');
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.get('/api/host/fleet', requireHost, async (req, res) => {
+  const { data, error } = await supabase.from('fleet').select('*').eq('host_id', req.user.id).order('created_at');
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.post('/api/host/fleet', requireHost, async (req, res) => {
+  const { year, make, model, category, price, image_url, features } = req.body;
+  if (!year || !make || !model || !category || !price)
+    return res.status(400).json({ message: 'All fields required.' });
+  const { data, error } = await supabase.from('fleet').insert([{ host_id: req.user.id, year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], available: true, approved: false }]).select().single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.status(201).json(data);
+});
+
+app.put('/api/host/fleet/:id', requireHost, async (req, res) => {
+  const { year, make, model, category, price, image_url, features, available } = req.body;
+  const { data, error } = await supabase.from('fleet').update({ year, make, model, category, price: Number(price), image_url, features, available }).eq('id', req.params.id).eq('host_id', req.user.id).select().single();
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.delete('/api/host/fleet/:id', requireHost, async (req, res) => {
+  const { error } = await supabase.from('fleet').delete().eq('id', req.params.id).eq('host_id', req.user.id);
+  if (error) return res.status(500).json({ message: error.message });
+  res.json({ message: 'Car deleted' });
+});
+
+app.get('/api/host/bookings', requireHost, async (req, res) => {
+  const { data: cars } = await supabase.from('fleet').select('id').eq('host_id', req.user.id);
+  if (!cars || cars.length === 0) return res.json([]);
+  const ids = cars.map(c => c.id);
+  const { data, error } = await supabase.from('bookings').select('*').in('vehicle_id', ids).order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ message: error.message });
+  res.json(data);
+});
+
+app.patch('/api/fleet/:id/approve', async (req, res) => {
+  const { data, error } = await supabase.from('fleet').update({ approved: true }).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
@@ -201,5 +325,14 @@ app.get('/api/bookings/availability/:carId', async (req, res) => {
   res.json(data);
 });
 
-const PORT = process.env.PORT || 5000;
+// ── SERVE FRONTEND ───────────────────────────────────────
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.use(errorLogger);
+
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

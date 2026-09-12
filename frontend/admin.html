@@ -350,7 +350,7 @@
       <a onclick="showSection('fleet')"><i class="fas fa-car"></i> Fleet</a>
       <a onclick="showSection('ratings')"><i class="fas fa-star"></i> Ratings</a>
       <a onclick="showSection('hosts')"><i class="fas fa-users"></i> Host Approvals</a>
-      <a href="index.html" target="_blank"><i class="fas fa-globe"></i> View Website</a>
+      <a href="https://www.manumanmobility.com/" target="_blank" rel="noopener"><i class="fas fa-globe"></i> View Website</a>
     </nav>
     <div class="sidebar-footer">
       <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -539,7 +539,7 @@
 
 <script>
   const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api'
+    ? 'http://localhost:5001/api'
     : 'https://manuman-api.vercel.app/api';
 
   function previewImage(input) {
@@ -661,6 +661,7 @@
   }
 
   function openModal(id) {
+    window.editGallery = [];
     document.getElementById('editCarId').value = '';
     document.getElementById('carYear').value = '';
     document.getElementById('carMake').value = '';
@@ -669,9 +670,12 @@
     document.getElementById('carPrice').value = '';
     document.getElementById('carImage').value = '';
     document.getElementById('carImageFile').value = '';
+    document.getElementById('carGalleryFiles').value = '';
     document.getElementById('carImagePreview').style.display = 'none';
+    document.getElementById('newGalleryPreview').innerHTML = '';
     document.getElementById('carFeatures').value = '';
     document.getElementById('modalTitle').textContent = 'Add New Car';
+    renderExistingGallery();
     if (id) {
       const car = allFleet.find(c => c.id === id);
       if (!car) return;
@@ -771,10 +775,12 @@
     try {
       const url = id ? `${API}/fleet/${id}` : `${API}/fleet`;
       const method = id ? 'PUT' : 'POST';
-      await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Request failed (${res.status}).`);
       closeModal();
       loadFleet();
-    } catch { alert('Error saving car.'); }
+    } catch (error) { alert(`Error saving car: ${error.message}`); }
   }
 
   async function deleteCar(id) {

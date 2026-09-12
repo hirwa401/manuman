@@ -24,6 +24,7 @@ create table fleet (
   category text not null,
   price numeric not null,
   image_url text,
+  interior_images text[] default '{}',
   features text[],
   available boolean default true,
   approved boolean default false,

@@ -1,4 +1,4 @@
-const CACHE = 'manuman-v1';
+const CACHE = 'manuman-v3';
 const STATIC = [
   '/',
   '/index.html',
@@ -29,6 +29,15 @@ self.addEventListener('fetch', e => {
   if (e.request.url.includes('manuman-api.vercel.app')) return;
   if (e.request.url.includes('js.stripe.com')) return;
   if (e.request.url.includes('supabase.co')) return;
+
+  const requestUrl = new URL(e.request.url);
+  const isDocument = e.request.mode === 'navigate' || requestUrl.pathname.endsWith('.html');
+  const isScriptOrStyle = /\.(js|css)$/.test(requestUrl.pathname);
+
+  if (isDocument || isScriptOrStyle) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
 
   e.respondWith(
     caches.match(e.request).then(cached => {

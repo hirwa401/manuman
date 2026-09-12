@@ -3,11 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { errorLogger, registerProcessLogging, requestLogger } = require('../logger');
 
 const app = express();
+registerProcessLogging();
 
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
 app.use(express.json());
+app.use(requestLogger);
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -64,24 +67,37 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────
-app.post('/api/upload', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+// Raw binary handler (web admin sends file directly)
+app.post('/api/upload', (req, res, next) => {
+  const ct = req.headers['content-type'] || '';
+  if (ct.startsWith('image/')) {
+    express.raw({ type: 'image/*', limit: '10mb' })(req, res, next);
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
-    const contentType = req.headers['content-type'] || '';
     const bucketName = 'car-images';
+    let buffer, ct;
 
-    let buffer, ext, ct;
-    if (contentType.includes('application/json')) {
-      const body = JSON.parse(req.body.toString());
-      if (!body.image) return res.status(400).json({ message: 'No image provided.' });
-      buffer = Buffer.from(body.image, 'base64');
-      ct = body.contentType || 'image/jpeg';
-      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
-    } else {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.startsWith('image/')) {
+      // Raw binary from web admin
       buffer = req.body;
       ct = contentType;
-      ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
+    } else if (req.body && req.body.image) {
+      // JSON base64 from mobile app
+      buffer = Buffer.from(req.body.image, 'base64');
+      ct = req.body.contentType || 'image/jpeg';
+    } else {
+      return res.status(400).json({ message: 'No image provided.' });
     }
 
+    if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+      return res.status(400).json({ message: 'Invalid image data.' });
+    }
+
+    const ext = ct.split('/')[1]?.split(';')[0] || 'jpeg';
     const filename = `${bucketName}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from(bucketName).upload(filename, buffer, { contentType: ct, upsert: true });
     if (error) return res.status(500).json({ message: error.message });
@@ -128,18 +144,36 @@ app.get('/api/fleet/pending', async (req, res) => {
   res.json(data);
 });
 
+async function fleetWrite(operation, payload) {
+  let values = { ...payload };
+  for (const optionalField of ['interior_images', 'approved']) {
+    const result = await operation(values);
+    if (!result.error || !result.error.message.includes(optionalField)) return result;
+    delete values[optionalField];
+  }
+  return operation(values);
+}
+
 app.post('/api/fleet', async (req, res) => {
   const { year, make, model, category, price, image_url, features, interior_images } = req.body;
   if (!year || !make || !model || !category || !price)
     return res.status(400).json({ message: 'year, make, model, category and price are required.' });
-  const { data, error } = await supabase.from('fleet').insert([{ year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true, approved: true }]).select().single();
+  const payload = { year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true, approved: true };
+  const { data, error } = await fleetWrite(
+    values => supabase.from('fleet').insert([values]).select().single(),
+    payload
+  );
   if (error) return res.status(500).json({ message: error.message });
   res.status(201).json(data);
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
   const { year, make, model, category, price, image_url, features, available, interior_images } = req.body;
-  const { data, error } = await supabase.from('fleet').update({ year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] }).eq('id', req.params.id).select().single();
+  const payload = { year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] };
+  const { data, error } = await fleetWrite(
+    values => supabase.from('fleet').update(values).eq('id', req.params.id).select().single(),
+    payload
+  );
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
@@ -314,5 +348,7 @@ app.delete('/api/contacts/:id', async (req, res) => {
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Contact deleted' });
 });
+
+app.use(errorLogger);
 
 module.exports = app;

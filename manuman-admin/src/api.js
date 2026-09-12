@@ -1,4 +1,4 @@
-const BASE = __DEV__ ? 'http://localhost:5000/api' : 'https://manuman-api.vercel.app/api';
+const BASE = __DEV__ ? 'http://localhost:5001/api' : 'https://manuman-api.vercel.app/api';
 
 async function request(path, options = {}) {
   let response;
