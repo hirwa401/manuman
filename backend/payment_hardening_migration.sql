@@ -1,6 +1,7 @@
 -- Payment hardening: one Stripe PaymentIntent maps to one booking.
 -- Run this in Supabase SQL Editor before deploying the hardened payment API.
 alter table bookings
+  add column if not exists user_id uuid references profiles(id) on delete set null,
   add column if not exists delivery_fee numeric default 0,
   add column if not exists driver_license text,
   add column if not exists driver_license_image text,
