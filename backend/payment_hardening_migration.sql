@@ -2,6 +2,9 @@
 -- Run this in Supabase SQL Editor before deploying the hardened payment API.
 alter table bookings
   add column if not exists delivery_fee numeric default 0,
+  add column if not exists driver_license text,
+  add column if not exists driver_license_image text,
+  add column if not exists terms_accepted boolean default false,
   add column if not exists stripe_payment_intent_id text,
   add column if not exists payment_status text default 'unpaid',
   add column if not exists payment_idempotency_key text;
