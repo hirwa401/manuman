@@ -228,6 +228,7 @@ app.patch('/api/host-requests/:id/reject', requireAdmin, async (req, res) => {
 async function calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate }) {
   const { data: car, error } = await supabase.from('fleet').select('id, year, make, model, price, available, approved').eq('id', vehicle).single();
   if (error || !car || car.available === false || car.approved === false) throw new Error('This vehicle is not available.');
+  if (!Number.isFinite(Number(car.price)) || Number(car.price) <= 0) throw new Error('This vehicle does not have a valid rental price.');
   const start = new Date(`${pickupDate}T00:00:00Z`);
   const end = new Date(`${returnDate}T00:00:00Z`);
   const days = Math.ceil((end - start) / 86400000);
@@ -235,7 +236,9 @@ async function calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate }
   const base = days * Number(car.price);
   const discount = days > 7 ? Math.round(base * 0.1) : 0;
   const deliveryFee = pickup === 'Headquarters' ? 0 : 100;
-  return { car, days, deliveryFee, total: base - discount + deliveryFee };
+  const total = base - discount + deliveryFee;
+  if (total < 0.5) throw new Error('The booking total must be at least $0.50.');
+  return { car, days, deliveryFee, total };
 }
 
 // ── STRIPE PAYMENT INTENT ─────────────────────────────────
