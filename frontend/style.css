@@ -131,7 +131,13 @@ img { max-width: 100%; display: block; }
 .nav-links a i { font-size: 0.8rem; }
 .nav-links .btn-nav { background: linear-gradient(135deg, #ffc13b, #f5a800); color: #17202a !important; font-weight: 800; padding: 13px 21px; border-color: rgba(255,216,117,0.72); box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.46); }
 .nav-links .btn-nav:hover { background: linear-gradient(135deg, #ffd166, #f5a800); transform: translateY(-1px); box-shadow: 0 7px 18px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.55); }
-.nav-links #navAuthBtn .btn-nav-outline:hover { color: #17202a !important; background: linear-gradient(135deg, #ffd166, #f5a800) !important; border-color: #ffd166 !important; }
+.nav-links #navAuthBtn .btn-nav-outline:hover {
+  color: #F5A800 !important;
+  background: transparent !important;
+  border-color: #F5A800 !important;
+  box-shadow: none !important;
+  transform: none;
+}
 .nav-toggle {
   display: none;
   background: none;
@@ -1363,4 +1369,4 @@ img { max-width: 100%; display: block; }
 .status-paid { background: #d1fae5; color: #065f46; }
 .status-cancelled { background: #fee2e2; color: #991b1b; }
 .btn-nav-outline { background: transparent !important; border: 1.5px solid #F5A800 !important; color: #F5A800 !important; }
-.btn-nav-outline:hover { background: #F5A800 !important; color: #fff !important; }
+.btn-nav-outline:hover { background: transparent !important; color: #F5A800 !important; }
