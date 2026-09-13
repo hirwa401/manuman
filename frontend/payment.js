@@ -14,7 +14,7 @@ async function initPaymentPage() {
   sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
   document.getElementById('checkoutSummary').innerHTML = `
     <div class="bmodal-header">
-      <div class="bmodal-car-img"><img src="images/fleet-card.png"/></div>
+      <div class="bmodal-car-img">${draft.vehicleImage ? `<img src="${draft.vehicleImage}" alt="${draft.vehicleName}"/>` : ''}</div>
       <div>
         <div class="bmodal-car-badge">${draft.vehicleName}</div>
         <h3>${draft.vehicleName}</h3>

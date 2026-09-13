@@ -541,6 +541,7 @@ async function goToPayment() {
       pickup, pickupDate, returnDate, days,
       vehicle: selectedCar.id,
       vehicleName: `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`,
+      vehicleImage: selectedCar.image_url || '',
       customerName: name, customerEmail: email,
       customerPhone: document.getElementById('bPhone').value.trim(),
       driverLicense, driverLicenseImage, termsAccepted,
