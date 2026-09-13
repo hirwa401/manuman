@@ -49,9 +49,20 @@ create table bookings (
   payment_method text default 'cash',
   total_amount numeric default 0,
   delivery_fee numeric default 0,
+  stripe_payment_intent_id text,
+  payment_status text default 'unpaid',
+  payment_idempotency_key text,
   status text default 'pending',
   created_at timestamptz default now()
 );
+
+create unique index bookings_stripe_payment_intent_id_idx
+  on bookings (stripe_payment_intent_id)
+  where stripe_payment_intent_id is not null;
+
+create unique index bookings_payment_idempotency_key_idx
+  on bookings (payment_idempotency_key)
+  where payment_idempotency_key is not null;
 
 -- CONTACTS TABLE
 create table contacts (

@@ -10,6 +10,8 @@ async function initPaymentPage() {
     return;
   }
   const draft = JSON.parse(pending);
+  draft.idempotencyKey = draft.idempotencyKey || crypto.randomUUID();
+  sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
   document.getElementById('checkoutSummary').innerHTML = `
     <div class="bmodal-header">
       <div class="bmodal-car-img"><img src="images/fleet-card.png"/></div>
@@ -39,7 +41,20 @@ async function initPaymentPage() {
       // Create payment intent on backend
       const res = await fetch(`${API}/create-payment-intent`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: draft.totalAmount, customerEmail: draft.customerEmail, customerName: draft.customerName, description: draft.vehicleName })
+        body: JSON.stringify({
+          pickup: draft.pickup,
+          pickupDate: draft.pickupDate,
+          returnDate: draft.returnDate,
+          vehicle: draft.vehicle,
+          customerEmail: draft.customerEmail,
+          customerName: draft.customerName,
+          customerPhone: draft.customerPhone,
+          driverLicense: draft.driverLicense,
+          driverLicenseImage: draft.driverLicenseImage,
+          termsAccepted: draft.termsAccepted,
+          userId: draft.userId,
+          idempotencyKey: draft.idempotencyKey
+        })
       });
       const data = await res.json();
       if (!res.ok) { msg.style.color = 'red'; msg.textContent = data.message || 'Payment setup failed'; document.getElementById('checkoutPay').disabled = false; return; }
@@ -47,16 +62,21 @@ async function initPaymentPage() {
       const { error, paymentIntent } = await stripePay.confirmCardPayment(clientSecret, { payment_method: { card: stripeCard, billing_details: { name: draft.customerName, email: draft.customerEmail } } });
       if (error) { msg.style.color = 'red'; msg.textContent = error.message; document.getElementById('checkoutPay').disabled = false; return; }
       if (paymentIntent.status !== 'succeeded') { msg.style.color = 'red'; msg.textContent = 'Payment not completed'; document.getElementById('checkoutPay').disabled = false; return; }
-      // Save booking to server
-      const bookingRes = await fetch(`${API}/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, paymentMethod: 'card', totalAmount: draft.totalAmount, status: 'paid', driverLicenseImage: draft.driverLicenseImage || '' }) });
+      // Finalize the pending booking created by the payment-intent endpoint.
+      const bookingRes = await fetch(`${API}/confirm-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId: paymentIntent.id })
+      });
       if (bookingRes.ok) {
         sessionStorage.removeItem('pendingBooking');
         msg.style.color = 'green';
         msg.textContent = 'Payment successful! Booking confirmed.';
         setTimeout(() => window.location.href = 'index.html', 2000);
       } else {
-        const jr = await bookingRes.json();
-        msg.style.color = 'red'; msg.textContent = jr.message || 'Failed to save booking'; document.getElementById('checkoutPay').disabled = false;
+        msg.style.color = '#9a6700';
+        msg.textContent = 'Payment received. Your booking is being finalized.';
+        setTimeout(() => window.location.href = 'index.html', 2500);
       }
     } catch (e) {
       msg.style.color = 'red'; msg.textContent = 'Server error. Try again later.'; document.getElementById('checkoutPay').disabled = false;

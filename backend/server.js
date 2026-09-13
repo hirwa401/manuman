@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { errorLogger, registerProcessLogging, requestLogger } = require('./logger');
@@ -8,6 +9,29 @@ const { errorLogger, registerProcessLogging, requestLogger } = require('./logger
 const app = express();
 registerProcessLogging();
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (error) {
+    return res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+
+  try {
+    const paymentIntent = event.data.object;
+    if (event.type === 'payment_intent.succeeded') {
+      await supabase.from('bookings').update({ status: 'paid', payment_status: 'paid' })
+        .eq('stripe_payment_intent_id', paymentIntent.id);
+    } else if (event.type === 'payment_intent.payment_failed' || event.type === 'payment_intent.canceled') {
+      await supabase.from('bookings').update({ status: 'pending', payment_status: event.type.endsWith('canceled') ? 'canceled' : 'failed' })
+        .eq('stripe_payment_intent_id', paymentIntent.id);
+    }
+    res.json({ received: true });
+  } catch (error) {
+    errorLogger(error);
+    res.status(500).json({ message: 'Webhook processing failed.' });
+  }
+});
 app.use(express.json());
 app.use(requestLogger);
 
@@ -201,21 +225,72 @@ app.patch('/api/host-requests/:id/reject', requireAdmin, async (req, res) => {
   res.json(data);
 });
 
+async function calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate }) {
+  const { data: car, error } = await supabase.from('fleet').select('id, year, make, model, price, available, approved').eq('id', vehicle).single();
+  if (error || !car || car.available === false || car.approved === false) throw new Error('This vehicle is not available.');
+  const start = new Date(`${pickupDate}T00:00:00Z`);
+  const end = new Date(`${returnDate}T00:00:00Z`);
+  const days = Math.ceil((end - start) / 86400000);
+  if (!Number.isInteger(days) || days <= 0) throw new Error('Return date must be after pick-up date.');
+  const base = days * Number(car.price);
+  const discount = days > 7 ? Math.round(base * 0.1) : 0;
+  const deliveryFee = pickup === 'Headquarters' ? 0 : 100;
+  return { car, days, deliveryFee, total: base - discount + deliveryFee };
+}
+
 // ── STRIPE PAYMENT INTENT ─────────────────────────────────
 app.post('/api/create-payment-intent', async (req, res) => {
-  const { amount, customerEmail, customerName, description } = req.body;
-  if (!amount || amount <= 0) return res.status(400).json({ message: 'Invalid amount.' });
+  const { pickup, pickupDate, returnDate, vehicle, customerEmail, customerName, customerPhone, driverLicense, driverLicenseImage, termsAccepted, userId, idempotencyKey } = req.body;
+  if (!pickup || !pickupDate || !returnDate || !vehicle || !customerName || !customerEmail || !driverLicense || !driverLicenseImage || termsAccepted !== true)
+    return res.status(400).json({ message: 'Complete booking and identity details are required.' });
+  const paymentKey = idempotencyKey || crypto.randomUUID();
   try {
+    const { car, days, deliveryFee, total } = await calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate });
+    const { data: existing } = await supabase.from('bookings').select('id, stripe_payment_intent_id, total_amount').eq('payment_idempotency_key', paymentKey).maybeSingle();
+    if (existing?.stripe_payment_intent_id) {
+      const existingIntent = await stripe.paymentIntents.retrieve(existing.stripe_payment_intent_id);
+      return res.json({ clientSecret: existingIntent.client_secret, bookingId: existing.id, totalAmount: existing.total_amount });
+    }
+    let booking = existing;
+    if (!booking) {
+      const { data: createdBooking, error: bookingError } = await supabase.from('bookings').insert([{
+        user_id: userId || null, pickup, pickup_date: pickupDate, return_date: returnDate,
+        vehicle_id: vehicle, vehicle_name: `${car.year} ${car.make} ${car.model}`,
+        customer_name: customerName, customer_email: customerEmail, customer_phone: customerPhone || '',
+        driver_license: driverLicense, driver_license_image: driverLicenseImage, terms_accepted: true,
+        payment_method: 'card', total_amount: total, delivery_fee: deliveryFee,
+        status: 'payment_pending', payment_status: 'unpaid', payment_idempotency_key: paymentKey
+      }]).select('id').single();
+      if (bookingError) throw bookingError;
+      booking = createdBooking;
+    }
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // cents
+      amount: Math.round(total * 100),
       currency: 'usd',
       receipt_email: customerEmail,
-      description: description || 'ManuMan Mobility Rental',
-      metadata: { customerName: customerName || '' }
-    });
-    res.json({ clientSecret: paymentIntent.client_secret });
+      description: `${car.year} ${car.make} ${car.model} rental`,
+      metadata: { bookingId: booking.id, customerName },
+    }, { idempotencyKey: paymentKey });
+    const { error: intentError } = await supabase.from('bookings').update({ stripe_payment_intent_id: paymentIntent.id }).eq('id', booking.id);
+    if (intentError) throw intentError;
+    res.json({ clientSecret: paymentIntent.client_secret, bookingId: booking.id, totalAmount: total, days });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+app.post('/api/confirm-payment', async (req, res) => {
+  const { paymentIntentId } = req.body;
+  if (!paymentIntentId) return res.status(400).json({ message: 'Payment intent is required.' });
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') return res.status(409).json({ message: 'Payment has not succeeded.' });
+    const { data, error } = await supabase.from('bookings').update({ status: 'paid', payment_status: 'paid' })
+      .eq('stripe_payment_intent_id', paymentIntent.id).select().single();
+    if (error || !data) return res.status(500).json({ message: error?.message || 'Booking could not be finalized.' });
+    res.json({ booking: data });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
