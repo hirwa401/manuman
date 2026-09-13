@@ -292,7 +292,7 @@ async function loadFleet(attempt = 1) {
       });
     }
       grid.innerHTML = fleet.map((car, i) => `
-        <div class="car-card ${i === 1 ? 'featured' : ''}">
+        <div class="car-card ${i === 1 ? 'featured' : ''}" role="button" tabindex="0" onclick='openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})' onkeydown='if(event.key === "Enter" || event.key === " "){event.preventDefault();openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})}'>
           <div class="car-badge">${car.category}</div>
           ${i === 1 ? '<div class="featured-tag">Most Popular</div>' : ''}
           <div class="car-image-wrap">
@@ -305,11 +305,12 @@ async function loadFleet(attempt = 1) {
               <h3>${car.make} ${car.model}</h3>
             </div>
             <ul class="car-features">
-              ${(car.features || []).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+              ${(car.features || []).map((f, featureIndex) => `<li class="${featureIndex >= 3 ? 'feature-extra' : ''}"><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
             </ul>
+            ${(car.features || []).length > 3 ? '<button class="view-features-btn" type="button" aria-expanded="false" onclick="event.stopPropagation(); toggleCardFeatures(this)">View more <i class="fas fa-chevron-down"></i></button>' : ''}
             <div class="car-footer">
               <div class="car-price">From <strong>$${car.price}</strong>/day</div>
-              <button class="btn-secondary" type="button" onclick="bookCar('${car.id}')">Book Now</button>
+              <button class="btn-secondary" type="button" onclick="event.stopPropagation(); bookCar('${car.id}')">Book Now</button>
             </div>
           </div>
         </div>`).join('');
@@ -322,6 +323,20 @@ async function loadFleet(attempt = 1) {
   }
 }
 loadFleet();
+
+function toggleCardFeatures(button) {
+  const featureList = button.previousElementSibling;
+  const expanded = button.getAttribute('aria-expanded') === 'true';
+  featureList.classList.toggle('is-expanded', !expanded);
+  button.setAttribute('aria-expanded', String(!expanded));
+  button.innerHTML = expanded
+    ? 'View more <i class="fas fa-chevron-down"></i>'
+    : 'View less <i class="fas fa-chevron-up"></i>';
+}
+
+function openVehicleDetails(car) {
+  window.location.href = `vehicle.html?id=${encodeURIComponent(car.id)}`;
+}
 
 // ── BOOKING MODAL ─────────────────────────────────────────
 let bookedRanges = [];

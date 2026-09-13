@@ -525,6 +525,8 @@ img { max-width: 100%; display: block; }
   transition: transform 0.5s ease;
 }
 .car-card:hover img { transform: scale(1.04); }
+.car-card[role="button"] { cursor: pointer; }
+.car-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
 .car-info { padding: 20px 22px 22px; }
 
 .car-image-wrap {
@@ -566,6 +568,8 @@ img { max-width: 100%; display: block; }
   margin-top: 2px;
 }
 .car-features { margin-bottom: 18px; display: flex; flex-direction: column; gap: 7px; }
+.car-features .feature-extra { display: none; }
+.car-features.is-expanded .feature-extra { display: flex; }
 .car-features li {
   font-size: 0.88rem;
   color: var(--text-gray);
@@ -574,6 +578,19 @@ img { max-width: 100%; display: block; }
   gap: 8px;
 }
 .car-features li i { color: var(--gold); font-size: 0.85rem; }
+.view-features-btn {
+  border: 0;
+  background: transparent;
+  color: var(--dark-navy);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin: -8px 0 16px;
+  padding: 4px 0;
+}
+.view-features-btn:hover,
+.view-features-btn:focus-visible { color: var(--gold); }
+.view-features-btn i { margin-left: 4px; }
 .car-footer {
   display: flex;
   align-items: center;
@@ -583,6 +600,8 @@ img { max-width: 100%; display: block; }
 }
 .car-price { font-size: 0.9rem; color: var(--text-gray); }
 .car-price strong { font-size: 1.3rem; color: var(--dark-navy); }
+
+/* ===== VEHICLE DETAILS ===== */
 
 /* ===== HOW IT WORKS ===== */
 .how-it-works {

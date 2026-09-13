@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicle Details - ManuMan Mobility</title>
+  <link rel="icon" type="image/png" href="images/mainsmalllogo.png" />
+  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .vehicle-page { min-height: 100vh; background: #f4f6f9; padding: 112px 24px 64px; }
+    .vehicle-page-inner { max-width: 1080px; margin: 0 auto; }
+    .vehicle-back { display: inline-flex; align-items: center; gap: 8px; color: #0d1b2a; font-weight: 700; margin-bottom: 22px; }
+    .vehicle-back:hover { color: #F5A800; }
+    .vehicle-detail-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr); background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,0.12); }
+    .vehicle-detail-media { min-height: 520px; background: #0d1b2a; }
+    .vehicle-detail-media > img { width: 100%; height: 100%; min-height: 520px; object-fit: cover; }
+    .vehicle-detail-info { padding: 42px; }
+    .vehicle-detail-badge { display: inline-block; background: #0d1b2a; color: #F5A800; border-radius: 20px; padding: 5px 13px; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.8px; }
+    .vehicle-detail-year { display: block; color: #F5A800; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; margin-top: 22px; text-transform: uppercase; }
+    .vehicle-detail-info h1 { color: #0d1b2a; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; margin-top: 5px; }
+    .vehicle-detail-price { color: #666; margin-top: 14px; font-size: 1rem; }
+    .vehicle-detail-price strong { color: #0d1b2a; font-size: 1.5rem; }
+    .vehicle-detail-rule { border: 0; border-top: 1px solid #eee; margin: 28px 0 22px; }
+    .vehicle-detail-info h2 { color: #0d1b2a; font-size: 1.05rem; margin-bottom: 15px; }
+    .vehicle-detail-features { display: grid; gap: 12px; }
+    .vehicle-detail-features li { display: flex; gap: 10px; color: #555; line-height: 1.4; }
+    .vehicle-detail-features i { color: #F5A800; margin-top: 3px; }
+    .vehicle-detail-actions { display: flex; gap: 12px; margin-top: 34px; }
+    .vehicle-detail-actions > * { flex: 1; text-align: center; }
+    .vehicle-signin { border: 2px solid #F5A800; color: #0d1b2a; padding: 12px 22px; border-radius: 999px; font-weight: 700; }
+    .vehicle-signin:hover { background: #F5A800; }
+    .vehicle-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+    .vehicle-gallery img { width: 72px; height: 56px; border-radius: 6px; object-fit: cover; }
+    .vehicle-loading, .vehicle-error { max-width: 600px; margin: 80px auto; text-align: center; color: #555; }
+    .vehicle-error h1 { color: #0d1b2a; margin-bottom: 10px; }
+    @media (max-width: 760px) {
+      .vehicle-page { padding: 96px 16px 40px; }
+      .vehicle-detail-layout { grid-template-columns: 1fr; }
+      .vehicle-detail-media, .vehicle-detail-media > img { min-height: 280px; height: 280px; }
+      .vehicle-detail-info { padding: 28px 22px; }
+    }
+    @media (max-width: 430px) {
+      .vehicle-detail-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html#fleet" class="nav-logo"><img src="images/websiteimage.png" alt="ManuMan Mobility Logo" /></a>
+      <ul class="nav-links">
+        <li><a href="index.html#fleet">Our Fleet</a></li>
+        <li><a href="booking.html" class="btn-nav">Book Now</a></li>
+        <li><a href="login.html" class="btn-nav btn-nav-outline">Sign In</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="vehicle-page">
+    <div class="vehicle-page-inner" id="vehiclePageContent">
+      <div class="vehicle-loading"><i class="fas fa-spinner fa-spin"></i> Loading vehicle details...</div>
+    </div>
+  </main>
+
+  <script src="config.js?v=3"></script>
+  <script>
+    const vehicleId = new URLSearchParams(window.location.search).get('id');
+    const pageContent = document.getElementById('vehiclePageContent');
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+    }
+
+    function renderVehicle(car) {
+      const title = `${car.year || ''} ${car.make || ''} ${car.model || ''}`.trim();
+      const image = car.image_url || 'images/fleet-card.png';
+      const features = (car.features || []).map(feature => `<li><i class="fas fa-check-circle"></i><span>${escapeHtml(feature)}</span></li>`).join('') || '<li>No additional features listed.</li>';
+      const gallery = (car.interior_images || []).map(imageUrl => `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)} interior" />`).join('');
+      document.title = `${title} - ManuMan Mobility`;
+      pageContent.innerHTML = `
+        <a class="vehicle-back" href="index.html#fleet"><i class="fas fa-arrow-left"></i> Back to fleet</a>
+        <article class="vehicle-detail-layout">
+          <div class="vehicle-detail-media"><img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" onerror="this.src='images/fleet-card.png'" /></div>
+          <div class="vehicle-detail-info">
+            <span class="vehicle-detail-badge">${escapeHtml(car.category || 'Vehicle')}</span>
+            <span class="vehicle-detail-year">${escapeHtml(car.year || '')}</span>
+            <h1>${escapeHtml(`${car.make || ''} ${car.model || ''}`.trim())}</h1>
+            <div class="vehicle-detail-price">From <strong>$${escapeHtml(car.price)}</strong>/day</div>
+            <hr class="vehicle-detail-rule" />
+            <h2>Vehicle features</h2>
+            <ul class="vehicle-detail-features">${features}</ul>
+            ${gallery ? `<div class="vehicle-gallery" aria-label="Interior images">${gallery}</div>` : ''}
+            <div class="vehicle-detail-actions">
+              <a class="btn-primary" href="booking.html?car=${encodeURIComponent(car.id)}">Book Now</a>
+              <a class="vehicle-signin" href="login.html">Sign In</a>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    async function loadVehicle() {
+      if (!vehicleId) {
+        pageContent.innerHTML = '<div class="vehicle-error"><h1>Vehicle not found</h1><p>Choose a vehicle from our fleet to view its details.</p><a class="btn-primary" href="index.html#fleet" style="margin-top:20px">View Fleet</a></div>';
+        return;
+      }
+      try {
+        const response = await fetch(`${API}/fleet`);
+        if (!response.ok) throw new Error('Fleet request failed');
+        const fleet = await response.json();
+        const car = fleet.find(item => String(item.id) === String(vehicleId) || String(item._id) === String(vehicleId));
+        if (!car) throw new Error('Vehicle not found');
+        renderVehicle(car);
+      } catch {
+        pageContent.innerHTML = '<div class="vehicle-error"><h1>Vehicle unavailable</h1><p>We could not load this vehicle right now.</p><a class="btn-primary" href="index.html#fleet" style="margin-top:20px">Back to Fleet</a></div>';
+      }
+    }
+
+    loadVehicle();
+  </script>
+</body>
+</html>
