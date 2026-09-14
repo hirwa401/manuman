@@ -1,3 +1,4 @@
+// These tests document the booking rules and protect them from accidental UI changes.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 

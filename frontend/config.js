@@ -1,3 +1,4 @@
+// Shared runtime configuration: choose the API endpoint from the current hostname.
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5001/api'
   : 'https://manuman-api.vercel.app/api';

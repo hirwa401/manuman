@@ -1,3 +1,4 @@
+// Pure validation helper: returning data instead of touching the DOM makes this easy to test.
 function validateBookingRequirements({ driverLicense, driverLicenseImage, termsAccepted }) {
   const cleanLicense = (driverLicense || '').trim();
   const cleanLicenseImage = typeof driverLicenseImage === 'string'

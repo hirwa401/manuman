@@ -1,3 +1,4 @@
+// Service worker cache: install stores core files for faster and more resilient page loads.
 const CACHE = 'manuman-v3';
 const STATIC = [
   '/',

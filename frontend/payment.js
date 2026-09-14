@@ -1,3 +1,4 @@
+// Payment-page state: these references are filled when Stripe Elements is initialized.
 let stripePay = null;
 let stripeCard = null;
 

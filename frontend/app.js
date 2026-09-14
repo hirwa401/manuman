@@ -1,4 +1,5 @@
 
+// Home-page controller: these variables track the selected vehicle, user, payment, and Stripe UI.
 let selectedCar = null;
 let payMethod = 'card';
 let currentUser = null;

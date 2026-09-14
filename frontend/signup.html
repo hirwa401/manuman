@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Standalone account-creation page: the browser builds the form, then runs the script at the bottom. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,6 +8,7 @@
   <link rel="icon" type="image/png" href="images/mainsmalllogo.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
+    /* Keep the main brand colors in variables so related rules stay consistent. */
     :root {
       --gold: #F5A800;
       --gold-dark: #d4900a;
@@ -21,7 +23,7 @@
       background: var(--dark-navy);
     }
 
-    /* ── LEFT PANEL ── */
+    /* The left panel introduces the service and is hidden on small screens. */
     .auth-left {
       flex: 1;
       display: flex;
@@ -89,7 +91,7 @@
       flex-shrink: 0;
     }
 
-    /* ── RIGHT PANEL ── */
+    /* The right panel contains the account-creation workflow. */
     .auth-right {
       width: 480px;
       flex-shrink: 0;
@@ -145,6 +147,7 @@
       background: #fff;
     }
 
+    /* JavaScript adds .show when local validation or Supabase returns an error. */
     .auth-error {
       background: #fff0f0;
       border: 1px solid #fcc;
@@ -187,6 +190,7 @@
     .btn-auth:hover { background: var(--gold-dark); transform: translateY(-1px); }
     .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+    /* This is a real checkbox so agreement works with keyboards and assistive technology. */
     .auth-terms {
       font-size: 0.78rem;
       color: #aaa;
@@ -263,6 +267,7 @@
 
   <!-- RIGHT -->
   <div class="auth-right">
+    <!-- This section is hidden after signup succeeds. -->
     <div id="formSection">
       <div class="auth-right-header">
         <h2>Create Account</h2>
@@ -295,6 +300,7 @@
         </div>
       </div>
 
+      <!-- Clicking the button enters the same validation path used by the Enter key. -->
       <button class="btn-auth" id="signupBtn" onclick="doSignup()">
         <i class="fas fa-user-plus"></i> Create Account
       </button>
@@ -323,12 +329,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
   <script>
+    // Create one Supabase client for session checks and account creation.
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = 'index.html';
     });
 
+    // Check local input first, then send valid data to Supabase.
     async function doSignup() {
       const name = document.getElementById('signupName').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
@@ -338,14 +346,17 @@
       const btn = document.getElementById('signupBtn');
       errEl.classList.remove('show');
 
+      // Each failed check returns early, so invalid input never reaches the network request.
       if (!name) { errEl.textContent = 'Please enter your full name.'; errEl.classList.add('show'); return; }
       if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; errEl.classList.add('show'); return; }
       if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.add('show'); return; }
       if (!termsAccepted) { errEl.textContent = 'You must agree to the terms and conditions.'; errEl.classList.add('show'); return; }
 
+      // Prevent duplicate requests while the asynchronous signup call is pending.
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
 
+      // Store the name as metadata; Supabase handles the confirmation email.
       const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
       if (error) {
         errEl.textContent = error.message;
@@ -358,6 +369,7 @@
       }
     }
 
+    // Enter submits through doSignup so keyboard users receive identical validation.
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter') doSignup();
     });

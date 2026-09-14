@@ -21,3 +21,4 @@ create unique index if not exists bookings_payment_idempotency_key_idx
 update bookings
 set payment_status = case when payment_method = 'card' then 'paid' else 'unpaid' end
 where payment_status is null;
+f

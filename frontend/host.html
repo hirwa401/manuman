@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Host dashboard page: hosts use this view to manage vehicles and requests. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -8,56 +9,64 @@
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; margin: 0; }
-    .host-nav { background: #0d1b2a; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
-    .host-nav .logo { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.1rem; }
-    .host-nav .logo img { height: 36px; border-radius: 6px; }
-    .host-nav a { color: #aaa; text-decoration: none; font-size: 0.9rem; }
-    .host-nav a:hover { color: #fff; }
-    .host-wrap { max-width: 1000px; margin: 36px auto; padding: 0 20px; }
-    .host-header { margin-bottom: 28px; }
-    .host-header h2 { font-size: 1.6rem; color: #0d1b2a; margin: 0 0 4px; }
-    .host-header p { color: #888; margin: 0; font-size: 0.9rem; }
-    .host-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-    .host-tab { padding: 9px 20px; border: 1.5px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 0.88rem; color: #555; }
-    .host-tab.active { background: #0d1b2a; color: #fff; border-color: #0d1b2a; }
+    :root { --host-ink: #102b3d; --host-teal: #1c8f89; --host-mint: #d9f0e9; --host-gold: #f5a800; --host-line: rgba(16,43,61,0.1); }
+    * { box-sizing: border-box; }
+    body { background: radial-gradient(circle at 6% 2%, rgba(217,240,233,0.95), transparent 30%), linear-gradient(135deg, #f7faf8 0%, #edf4f1 48%, #f9f8f2 100%); color: var(--host-ink); font-family: 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; }
+    .host-nav { background: rgba(13,27,42,0.94); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.14); padding: 14px clamp(20px, 5vw, 68px); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .host-nav .logo { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.01em; }
+    .host-nav .logo img { height: 36px; border-radius: 10px; }
+    .host-nav a { color: rgba(255,255,255,0.64); text-decoration: none; font-size: 0.9rem; transition: color 0.2s ease, transform 0.2s ease; }
+    .host-nav a:hover { color: #fff; transform: translateY(-1px); }
+    .host-wrap { max-width: 1120px; margin: 0 auto; padding: 52px clamp(20px, 5vw, 68px) 72px; }
+    .host-header { margin-bottom: 30px; animation: host-rise 0.55s ease both; }
+    .host-header::before { content: 'HOST STUDIO'; display: block; color: var(--host-teal); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em; margin-bottom: 10px; }
+    .host-header h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); color: var(--host-ink); letter-spacing: -0.04em; margin: 0 0 8px; }
+    .host-header p { color: #627680; margin: 0; font-size: 0.98rem; }
+    .host-tabs { display: flex; gap: 8px; margin-bottom: 28px; padding: 5px; width: fit-content; max-width: 100%; overflow-x: auto; border: 1px solid var(--host-line); border-radius: 16px; background: rgba(255,255,255,0.62); box-shadow: 0 12px 28px rgba(16,43,61,0.06); }
+    .host-tab { padding: 11px 18px; border: 0; border-radius: 11px; background: transparent; cursor: pointer; font-size: 0.88rem; color: #627680; white-space: nowrap; transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease; }
+    .host-tab:hover { color: var(--host-ink); transform: translateY(-1px); }
+    .host-tab.active { background: var(--host-ink); color: #fff; box-shadow: 0 7px 14px rgba(16,43,61,0.18); }
     .host-section { display: none; }
     .host-section.active { display: block; }
-    .host-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .host-card h4 { margin: 0 0 16px; color: #0d1b2a; }
+    .host-card { background: rgba(255,255,255,0.84); border: 1px solid rgba(255,255,255,0.85); border-radius: 22px; padding: clamp(20px, 4vw, 30px); box-shadow: 0 20px 50px rgba(16,43,61,0.09); margin-bottom: 16px; }
+    .host-card h4 { margin: 0 0 20px; color: var(--host-ink); font-size: 1.15rem; }
     .hform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .hform-group { display: flex; flex-direction: column; gap: 5px; }
     .hform-group label { font-size: 0.82rem; color: #666; font-weight: 600; }
-    .hform-group input, .hform-group select, .hform-group textarea { padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 0.88rem; font-family: inherit; outline: none; }
-    .hform-group input:focus, .hform-group select:focus { border-color: #F5A800; }
+    .hform-group input, .hform-group select, .hform-group textarea { padding: 12px 13px; border: 1.5px solid var(--host-line); border-radius: 11px; font-size: 0.88rem; font-family: inherit; outline: none; background: rgba(250,252,251,0.9); transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease; }
+    .hform-group input:focus, .hform-group select:focus { border-color: var(--host-teal); box-shadow: 0 0 0 4px rgba(28,143,137,0.12); background: #fff; }
     .hform-full { grid-column: 1 / -1; }
-    .btn-host { padding: 10px 22px; background: #F5A800; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
-    .btn-host:hover { background: #d4900a; }
-    .btn-danger-sm { padding: 5px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
-    .host-car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-    .host-car-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .host-car-card img { width: 100%; height: 160px; object-fit: cover; }
-    .host-car-info { padding: 14px; }
-    .host-car-info h4 { margin: 0 0 4px; font-size: 0.95rem; color: #0d1b2a; }
-    .host-car-info p { margin: 0 0 10px; color: #888; font-size: 0.82rem; }
+    .btn-host { padding: 12px 22px; background: var(--host-ink); color: #fff; border: none; border-radius: 11px; font-size: 0.9rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+    .btn-host:hover { background: var(--host-teal); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(28,143,137,0.2); }
+    .btn-danger-sm { padding: 7px 12px; background: rgba(231,76,60,0.1); color: #c0392b; border: 1px solid rgba(231,76,60,0.18); border-radius: 8px; font-size: 0.78rem; cursor: pointer; transition: background 0.2s ease; }
+    .btn-danger-sm:hover { background: rgba(231,76,60,0.16); }
+    .host-car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .host-car-card { background: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.92); border-radius: 20px; overflow: hidden; box-shadow: 0 18px 42px rgba(16,43,61,0.09); transition: transform 0.3s ease, box-shadow 0.3s ease; animation: host-rise 0.5s ease both; }
+    .host-car-card:hover { transform: translateY(-5px); box-shadow: 0 24px 50px rgba(16,43,61,0.14); }
+    .host-car-card img { width: 100%; height: 178px; object-fit: cover; }
+    .host-car-info { padding: 18px; }
+    .host-car-info h4 { margin: 0 0 6px; font-size: 1rem; color: var(--host-ink); }
+    .host-car-info p { margin: 0 0 12px; color: #71838a; font-size: 0.82rem; }
     .host-car-actions { display: flex; gap: 8px; }
     .pending-badge { background: #f39c12; color: #fff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; }
     .approved-badge { background: #2ecc71; color: #fff; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; }
-    .booking-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; }
+    .booking-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--host-line); font-size: 0.88rem; }
     .booking-row:last-child { border-bottom: none; }
     .status-pending { color: #f39c12; font-weight: 600; }
     .status-paid { color: #2ecc71; font-weight: 600; }
     .status-cancelled { color: #e74c3c; font-weight: 600; }
-    .earnings-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .earn-card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .earn-card .earn-val { font-size: 1.8rem; font-weight: 700; color: #0d1b2a; }
-    .earn-card .earn-label { font-size: 0.8rem; color: #888; margin-top: 4px; }
+    .earnings-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
+    .earn-card { position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(226,242,237,0.78)); border: 1px solid rgba(255,255,255,0.9); border-radius: 20px; padding: 22px; box-shadow: 0 16px 38px rgba(16,43,61,0.08); }
+    .earn-card::after { content: ''; position: absolute; width: 90px; height: 90px; right: -28px; bottom: -34px; border: 16px solid rgba(28,143,137,0.1); border-radius: 50%; }
+    .earn-card .earn-val { font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 800; color: var(--host-ink); letter-spacing: -0.04em; }
+    .earn-card .earn-label { font-size: 0.78rem; color: #71838a; margin-top: 6px; }
     .host-error { color: #e74c3c; font-size: 0.85rem; margin-top: 8px; }
     .host-success { color: #2ecc71; font-size: 0.85rem; margin-top: 8px; }
-    #hostGate { text-align: center; padding: 80px 20px; }
-    #hostGate h2 { color: #0d1b2a; }
+    #hostGate { text-align: center; padding: 120px 20px; }
+    #hostGate h2 { color: var(--host-ink); }
     #hostGate p { color: #888; margin-bottom: 24px; }
-    @media(max-width:600px) { .hform-grid { grid-template-columns: 1fr; } .earnings-box { grid-template-columns: 1fr; } }
+    @keyframes host-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media(max-width:600px) { .host-nav { align-items: flex-start; gap: 12px; } .host-nav > div:last-child { gap: 10px !important; flex-wrap: wrap; justify-content: flex-end; } .hform-grid { grid-template-columns: 1fr; } .earnings-box { grid-template-columns: 1fr; } .booking-row { align-items: flex-start; } }
   </style>
 </head>
 <body>
