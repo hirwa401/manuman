@@ -853,7 +853,8 @@ img { max-width: 100%; display: block; }
   .about-inner { grid-template-columns: 1fr; gap: 40px; }
 }
 
-@media (max-width: 768px) {
+/* Tablets use the compact menu before the desktop link row becomes crowded. */
+@media (max-width: 1050px) {
   .navbar { top: 12px; left: 12px; right: 12px; border-radius: 24px; }
   .nav-container { height: 64px; padding: 0 14px; }
   .nav-toggle { display: block; }
