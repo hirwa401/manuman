@@ -4,10 +4,9 @@ const assert = require('node:assert/strict');
 
 const { validateBookingRequirements } = require('./bookingValidation');
 
-test('rejects a booking when ID, photo, or terms are missing', () => {
+test('rejects a booking when ID or terms are missing', () => {
   const result = validateBookingRequirements({
     driverLicense: '   ',
-    driverLicenseImage: '',
     termsAccepted: false,
   });
 
@@ -15,10 +14,9 @@ test('rejects a booking when ID, photo, or terms are missing', () => {
   assert.match(result.message, /Driver's license|photo|terms/i);
 });
 
-test('accepts a valid booking with an ID, photo, and consent', () => {
+test('accepts a valid booking with an ID and consent', () => {
   const result = validateBookingRequirements({
     driverLicense: 'D12345678',
-    driverLicenseImage: 'https://example.com/license.jpg',
     termsAccepted: true,
   });
 

@@ -629,9 +629,9 @@
         body: JSON.stringify({ password: pw })
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.token) {
         sessionStorage.setItem('adminAuth', 'true');
-        sessionStorage.setItem('adminPassword', pw);
+        sessionStorage.setItem('adminToken', data.token);
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadAll();
@@ -645,16 +645,23 @@
 
   function logout() {
     sessionStorage.removeItem('adminAuth');
-    sessionStorage.removeItem('adminPassword');
+    sessionStorage.removeItem('adminToken');
     location.reload();
   }
 
   function adminHeaders() {
-    return { 'X-Admin-Password': sessionStorage.getItem('adminPassword') || '' };
+    return { 'X-Admin-Token': sessionStorage.getItem('adminToken') || '' };
+  }
+
+  function adminFetch(path, options = {}) {
+    return fetch(`${API}${path}`, {
+      ...options,
+      headers: { ...adminHeaders(), ...(options.headers || {}) }
+    });
   }
 
   // Auto-restore session
-  if (sessionStorage.getItem('adminAuth')) {
+  if (sessionStorage.getItem('adminAuth') && sessionStorage.getItem('adminToken')) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     loadAll();
@@ -696,7 +703,7 @@
 
   async function loadFleet() {
     try {
-      const res = await fetch(`${API}/fleet`);
+      const res = await adminFetch('/fleet');
       allFleet = await res.json();
       renderFleet();
     } catch { document.getElementById('fleetGrid').innerHTML = '<p style="color:#aaa;padding:20px">⚠️ Could not load fleet.</p>'; }
@@ -833,9 +840,9 @@
       alert('Please fill in year, make, model and price.'); return;
     }
     try {
-      const url = id ? `${API}/fleet/${id}` : `${API}/fleet`;
+      const url = id ? `/fleet/${id}` : '/fleet';
       const method = id ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await adminFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || `Request failed (${res.status}).`);
       closeModal();
@@ -846,7 +853,7 @@
   async function deleteCar(id) {
     if (!confirm('Remove this car from the fleet?')) return;
     try {
-      await fetch(`${API}/fleet/${id}`, { method: 'DELETE' });
+      await adminFetch(`/fleet/${id}`, { method: 'DELETE' });
       loadFleet();
     } catch { alert('Error deleting car.'); }
   }
@@ -857,7 +864,7 @@
   // ── BOOKINGS ──────────────────────────────────────────────
   async function loadBookings() {
     try {
-      const res = await fetch(`${API}/bookings`);
+      const res = await adminFetch('/bookings');
       allBookings = await res.json();
       renderBookings();
       updateStats();
@@ -901,7 +908,7 @@
 
   async function updateStatus(id, status) {
     try {
-      await fetch(`${API}/bookings/${id}`, {
+      await adminFetch(`/bookings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -913,7 +920,7 @@
   async function deleteBooking(id) {
     if (!confirm('Delete this booking?')) return;
     try {
-      await fetch(`${API}/bookings/${id}`, { method: 'DELETE' });
+      await adminFetch(`/bookings/${id}`, { method: 'DELETE' });
       loadBookings();
     } catch { alert('Error deleting booking.'); }
   }
@@ -921,7 +928,7 @@
   // ── CONTACTS ──────────────────────────────────────────────
   async function loadContacts() {
     try {
-      const res = await fetch(`${API}/contacts`);
+      const res = await adminFetch('/contacts');
       allContacts = await res.json();
       renderContacts();
       updateStats();
@@ -946,7 +953,7 @@
   async function deleteContact(id) {
     if (!confirm('Delete this message?')) return;
     try {
-      await fetch(`${API}/contacts/${id}`, { method: 'DELETE' });
+      await adminFetch(`/contacts/${id}`, { method: 'DELETE' });
       loadContacts();
     } catch { alert('Error deleting message.'); }
   }
@@ -955,7 +962,7 @@
   let allRatings = [];
   async function loadRatings() {
     try {
-      const res = await fetch(`${API}/ratings`);
+      const res = await adminFetch('/ratings');
       allRatings = await res.json();
       const tbody = document.getElementById('ratingsBody');
       if (!allRatings.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No ratings yet.</td></tr>`; return; }
@@ -973,14 +980,14 @@
   async function deleteRating(id) {
     if (!confirm('Delete this rating?')) return;
     try {
-      await fetch(`${API}/ratings/${id}`, { method: 'DELETE' });
+      await adminFetch(`/ratings/${id}`, { method: 'DELETE' });
       loadRatings();
     } catch { alert('Error deleting rating.'); }
   }
 
   async function loadPendingCars() {
     try {
-      const requestsResponse = await fetch(`${API}/host-requests`, { headers: adminHeaders() });
+      const requestsResponse = await adminFetch('/host-requests');
       const requests = requestsResponse.ok ? await requestsResponse.json() : [];
       const requestsEl = document.getElementById('hostRequestsList');
       if (!requests.length) {
@@ -1001,10 +1008,10 @@
         }).join('');
       }
 
-      const res = await fetch(`${API}/fleet?all=1`);
+      const res = await adminFetch('/fleet?all=1');
       // fetch all including unapproved via admin — use service key workaround via direct supabase not available here
       // Instead fetch all fleet (approved only) and pending separately
-      const r2 = await fetch(`${API}/fleet/pending`);
+      const r2 = await adminFetch('/fleet/pending');
       const cars = r2.ok ? await r2.json() : [];
       const el = document.getElementById('pendingCarsList');
       if (!cars.length) { el.innerHTML = '<p style="color:#888">No pending listings.</p>'; return; }
@@ -1020,19 +1027,19 @@
   }
 
   async function approveCar(id) {
-    await fetch(`${API}/fleet/${id}/approve`, { method: 'PATCH' });
+    await adminFetch(`/fleet/${id}/approve`, { method: 'PATCH' });
     loadPendingCars();
   }
 
   async function approveHostRequest(id) {
-    const response = await fetch(`${API}/host-requests/${id}/approve`, { method: 'PATCH', headers: adminHeaders() });
+    const response = await adminFetch(`/host-requests/${id}/approve`, { method: 'PATCH' });
     if (!response.ok) return alert('Could not approve host application.');
     loadPendingCars();
   }
 
   async function rejectHostRequest(id) {
     if (!confirm('Reject this host application?')) return;
-    const response = await fetch(`${API}/host-requests/${id}/reject`, { method: 'PATCH', headers: adminHeaders() });
+    const response = await adminFetch(`/host-requests/${id}/reject`, { method: 'PATCH' });
     if (!response.ok) return alert('Could not reject host application.');
     loadPendingCars();
   }

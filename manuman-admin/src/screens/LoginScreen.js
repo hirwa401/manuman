@@ -12,7 +12,7 @@ export default function LoginScreen({ onLogin }) {
     setLoading(true); setError('');
     try {
       const data = await api.post('/admin/login', { password });
-      if (data.success) onLogin();
+      if (data.success && data.token) onLogin(data.token);
       else setError('Wrong password. Try again.');
     } catch (error) {
       setError(error.message);

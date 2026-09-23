@@ -11,6 +11,9 @@ registerProcessLogging();
 
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true }));
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    return res.status(503).json({ message: 'Stripe webhook is not configured.' });
+  }
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
@@ -42,6 +45,72 @@ const supabase = createClient(
   { db: { schema: 'public' }, auth: { persistSession: false } }
 );
 
+function stripeIsConfigured() {
+  return Boolean(process.env.STRIPE_SECRET_KEY);
+}
+
+const identityProofSecret = process.env.IDENTITY_TOKEN_SECRET || process.env.STRIPE_SECRET_KEY;
+
+function createIdentityProof(sessionId, email) {
+  const payload = Buffer.from(JSON.stringify({ sessionId, email: email.toLowerCase(), exp: Date.now() + 60 * 60 * 1000 })).toString('base64url');
+  const signature = crypto.createHmac('sha256', identityProofSecret).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+async function verifyIdentity(sessionId, proof, customerEmail) {
+  if (!sessionId || !proof || !customerEmail || !identityProofSecret) throw new Error('Complete identity verification before continuing to payment.');
+  const [payload, signature] = proof.split('.');
+  const expected = crypto.createHmac('sha256', identityProofSecret).update(payload || '').digest('base64url');
+  if (!signature || signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected)))
+    throw new Error('Your identity-verification session is invalid. Please verify again.');
+  let claims;
+  try { claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')); } catch { throw new Error('Your identity-verification session is invalid. Please verify again.'); }
+  if (claims.sessionId !== sessionId || claims.email !== customerEmail.toLowerCase() || claims.exp <= Date.now())
+    throw new Error('Your identity-verification session has expired. Please verify again.');
+
+  const session = await stripe.identity.verificationSessions.retrieve(sessionId);
+  if (session.metadata?.customer_email !== customerEmail.toLowerCase())
+    throw new Error('This identity-verification session does not match this booking.');
+  return session;
+}
+
+function isAllowedIdentityReturnUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['https://manumanmobility.com', 'https://www.manumanmobility.com', 'http://localhost:5000', 'http://127.0.0.1:5000'].includes(url.origin);
+  } catch {
+    return false;
+  }
+}
+
+// Admin sessions are signed by the server.  The password is used only to
+// obtain a session token and is never retained by a browser or mobile client.
+const ADMIN_TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const adminTokenSecret = process.env.ADMIN_TOKEN_SECRET || process.env.ADMIN_PASSWORD;
+
+function encodeAdminToken(value) {
+  return Buffer.from(JSON.stringify(value)).toString('base64url');
+}
+
+function createAdminToken() {
+  const payload = encodeAdminToken({ role: 'admin', exp: Date.now() + ADMIN_TOKEN_TTL_MS });
+  const signature = crypto.createHmac('sha256', adminTokenSecret).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function isValidAdminToken(token) {
+  if (!adminTokenSecret || !token || !token.includes('.')) return false;
+  const [payload, signature] = token.split('.');
+  const expected = crypto.createHmac('sha256', adminTokenSecret).update(payload).digest('base64url');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+  try {
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return claims.role === 'admin' && Number.isFinite(claims.exp) && claims.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 // ── AUTH MIDDLEWARE ───────────────────────────────────────
 async function requireAuth(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
@@ -53,7 +122,7 @@ async function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-password'] !== process.env.ADMIN_PASSWORD)
+  if (!isValidAdminToken(req.headers['x-admin-token']))
     return res.status(401).json({ message: 'Admin access required.' });
   next();
 }
@@ -110,13 +179,46 @@ async function calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate }
   return { car, days, deliveryFee, total };
 }
 
+// ── STRIPE IDENTITY ───────────────────────────────────────
+app.post('/api/identity/verification-sessions', async (req, res) => {
+  const { customerEmail, returnUrl } = req.body;
+  if (!stripeIsConfigured()) return res.status(503).json({ message: 'Identity verification is temporarily unavailable.' });
+  if (!customerEmail || !isAllowedIdentityReturnUrl(returnUrl))
+    return res.status(400).json({ message: 'A valid email address and verification return URL are required.' });
+  try {
+    const session = await stripe.identity.verificationSessions.create({
+      type: 'document',
+      return_url: returnUrl,
+      options: { document: { require_matching_selfie: true, allowed_types: ['driving_license'] } },
+      metadata: { customer_email: customerEmail.trim().toLowerCase() },
+    });
+    res.status(201).json({ id: session.id, url: session.url, proof: createIdentityProof(session.id, customerEmail.trim()) });
+  } catch (error) {
+    console.error('Stripe Identity session creation failed:', error.message);
+    res.status(500).json({ message: `Could not start identity verification: ${error.message}` });
+  }
+});
+
+app.get('/api/identity/verification-sessions/:id', async (req, res) => {
+  try {
+    const session = await verifyIdentity(req.params.id, req.headers['x-identity-proof'], req.query.email);
+    res.json({ status: session.status });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // ── STRIPE PAYMENT INTENT ─────────────────────────────────
 app.post('/api/create-payment-intent', async (req, res) => {
-  const { pickup, pickupDate, returnDate, vehicle, customerEmail, customerName, customerPhone, driverLicense, driverLicenseImage, termsAccepted, userId, idempotencyKey } = req.body;
-  if (!pickup || !pickupDate || !returnDate || !vehicle || !customerName || !customerEmail || !driverLicense || !driverLicenseImage || termsAccepted !== true)
-    return res.status(400).json({ message: 'Complete booking and identity details are required.' });
+  const { pickup, pickupDate, returnDate, vehicle, customerEmail, customerName, customerPhone, driverLicense, termsAccepted, userId, idempotencyKey, identityVerificationSessionId, identityProof } = req.body;
+  if (!pickup || !pickupDate || !returnDate || !vehicle || !customerName || !customerEmail || !driverLicense || termsAccepted !== true)
+    return res.status(400).json({ message: 'Complete booking details are required.' });
+  if (!stripeIsConfigured())
+    return res.status(503).json({ message: 'Card payments are temporarily unavailable. Please contact ManuMan Mobility.' });
   const paymentKey = idempotencyKey || crypto.randomUUID();
   try {
+    const identitySession = await verifyIdentity(identityVerificationSessionId, identityProof, customerEmail);
+    if (identitySession.status !== 'verified') throw new Error('Your driver’s license verification is not complete yet.');
     const { car, days, deliveryFee, total } = await calculateBookingTotal({ vehicle, pickup, pickupDate, returnDate });
     const { data: existing } = await supabase.from('bookings').select('id, stripe_payment_intent_id, total_amount').eq('payment_idempotency_key', paymentKey).maybeSingle();
     if (existing?.stripe_payment_intent_id) {
@@ -129,7 +231,7 @@ app.post('/api/create-payment-intent', async (req, res) => {
         user_id: userId || null, pickup, pickup_date: pickupDate, return_date: returnDate,
         vehicle_id: vehicle, vehicle_name: `${car.year} ${car.make} ${car.model}`,
         customer_name: customerName, customer_email: customerEmail, customer_phone: customerPhone || '',
-        driver_license: driverLicense, driver_license_image: driverLicenseImage, terms_accepted: true,
+        driver_license: driverLicense, terms_accepted: true,
         payment_method: 'card', total_amount: total, delivery_fee: deliveryFee,
         status: 'payment_pending', payment_status: 'unpaid', payment_idempotency_key: paymentKey
       }]).select('id').single();
@@ -147,13 +249,16 @@ app.post('/api/create-payment-intent', async (req, res) => {
     if (intentError) throw intentError;
     res.json({ clientSecret: paymentIntent.client_secret, bookingId: booking.id, totalAmount: total, days });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Stripe payment-intent creation failed:', err.message);
+    res.status(500).json({ message: `Could not start card payment: ${err.message}` });
   }
 });
 
 app.post('/api/confirm-payment', async (req, res) => {
   const { paymentIntentId } = req.body;
   if (!paymentIntentId) return res.status(400).json({ message: 'Payment intent is required.' });
+  if (!stripeIsConfigured())
+    return res.status(503).json({ message: 'Card payments are temporarily unavailable. Please contact ManuMan Mobility.' });
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (paymentIntent.status !== 'succeeded') return res.status(409).json({ message: 'Payment has not succeeded.' });
@@ -169,7 +274,9 @@ app.post('/api/confirm-payment', async (req, res) => {
 // ── ADMIN AUTH ────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
-  if (password === process.env.ADMIN_PASSWORD) return res.json({ success: true });
+  if (!process.env.ADMIN_PASSWORD || !adminTokenSecret)
+    return res.status(500).json({ success: false, message: 'Admin authentication is not configured.' });
+  if (password === process.env.ADMIN_PASSWORD) return res.json({ success: true, token: createAdminToken() });
   res.status(401).json({ success: false, message: 'Wrong password' });
 });
 
@@ -356,7 +463,7 @@ app.get('/api/fleet', async (req, res) => {
   res.json(filtered);
 });
 
-app.get('/api/fleet/pending', async (req, res) => {
+app.get('/api/fleet/pending', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('fleet').select('*').eq('approved', false).order('created_at');
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
@@ -372,7 +479,7 @@ async function fleetWrite(operation, payload) {
   return operation(values);
 }
 
-app.post('/api/fleet', async (req, res) => {
+app.post('/api/fleet', requireAdmin, async (req, res) => {
   const { year, make, model, category, price, image_url, features, interior_images } = req.body;
   if (!year || !make || !model || !category || !price)
     return res.status(400).json({ message: 'year, make, model, category and price are required.' });
@@ -385,7 +492,7 @@ app.post('/api/fleet', async (req, res) => {
   res.status(201).json(data);
 });
 
-app.put('/api/fleet/:id', async (req, res) => {
+app.put('/api/fleet/:id', requireAdmin, async (req, res) => {
   const { year, make, model, category, price, image_url, features, available, interior_images } = req.body;
   const payload = { year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] };
   const { data, error } = await fleetWrite(
@@ -396,7 +503,7 @@ app.put('/api/fleet/:id', async (req, res) => {
   res.json(data);
 });
 
-app.delete('/api/fleet/:id', async (req, res) => {
+app.delete('/api/fleet/:id', requireAdmin, async (req, res) => {
   const { error } = await supabase.from('fleet').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Car deleted' });
@@ -452,7 +559,7 @@ app.get('/api/host/bookings', requireHost, async (req, res) => {
 });
 
 // Admin approves a car listing
-app.patch('/api/fleet/:id/approve', async (req, res) => {
+app.patch('/api/fleet/:id/approve', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('fleet').update({ approved: true }).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
@@ -460,21 +567,23 @@ app.patch('/api/fleet/:id/approve', async (req, res) => {
 
 // ── BOOKINGS ──────────────────────────────────────────────
 app.post('/api/bookings', async (req, res) => {
-  const { pickup, pickupDate, returnDate, vehicle, vehicleName, customerName, customerEmail, customerPhone, paymentMethod, totalAmount, deliveryFee, userId, driverLicense, driverLicenseImage, termsAccepted } = req.body;
+  const { pickup, pickupDate, returnDate, vehicle, vehicleName, customerName, customerEmail, customerPhone, paymentMethod, totalAmount, deliveryFee, userId, driverLicense, termsAccepted, identityVerificationSessionId, identityProof } = req.body;
   const normalizedLicense = (driverLicense || '').trim();
-  const normalizedLicenseImage = (driverLicenseImage || '').trim();
   const normalizedTerms = termsAccepted === true || termsAccepted === 'true';
   if (!pickup || !pickupDate || !returnDate || !vehicle)
     return res.status(400).json({ message: 'All fields are required.' });
   if (!normalizedLicense)
     return res.status(400).json({ message: "Driver's license or ID number is required before booking." });
-  if (!normalizedLicenseImage)
-    return res.status(400).json({ message: "A clear driver's license photo is required before booking." });
   if (!normalizedTerms)
     return res.status(400).json({ message: 'You must agree to the Terms & Conditions before booking.' });
+  if (paymentMethod === 'card')
+    return res.status(400).json({ message: 'Card bookings must be completed through the secure payment checkout.' });
   if (returnDate <= pickupDate)
     return res.status(400).json({ message: 'Return date must be after pick-up date.' });
-  const { data, error } = await supabase.from('bookings').insert([{
+  try {
+    const identitySession = await verifyIdentity(identityVerificationSessionId, identityProof, customerEmail);
+    if (identitySession.status !== 'verified') return res.status(409).json({ message: 'Your driver’s license verification is not complete yet.' });
+    const { data, error } = await supabase.from('bookings').insert([{
     user_id: userId || null,
     pickup, pickup_date: pickupDate, return_date: returnDate,
     vehicle_id: vehicle, vehicle_name: vehicleName || vehicle,
@@ -482,12 +591,14 @@ app.post('/api/bookings', async (req, res) => {
     customer_phone: customerPhone || '', payment_method: paymentMethod || 'cash',
     total_amount: totalAmount || 0, delivery_fee: deliveryFee || 0,
     driver_license: normalizedLicense,
-    driver_license_image: normalizedLicenseImage,
     terms_accepted: normalizedTerms,
     status: paymentMethod === 'card' ? 'paid' : 'pending'
-  }]).select().single();
-  if (error) return res.status(500).json({ message: error.message });
-  res.status(201).json({ message: 'Booking created', booking: data });
+    }]).select().single();
+    if (error) return res.status(500).json({ message: error.message });
+    res.status(201).json({ message: 'Booking created', booking: data });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
 });
 
 app.get('/api/bookings/availability/:carId', async (req, res) => {
@@ -504,19 +615,19 @@ app.get('/api/bookings/mine', requireAuth, async (req, res) => {
   res.json(data);
 });
 
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
 
-app.patch('/api/bookings/:id', async (req, res) => {
+app.patch('/api/bookings/:id', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('bookings').update({ status: req.body.status }).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
 
-app.delete('/api/bookings/:id', async (req, res) => {
+app.delete('/api/bookings/:id', requireAdmin, async (req, res) => {
   const { error } = await supabase.from('bookings').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Booking deleted' });
@@ -533,13 +644,13 @@ app.post('/api/ratings', async (req, res) => {
   res.status(201).json({ message: 'Rating submitted', rating: data });
 });
 
-app.get('/api/ratings', async (req, res) => {
+app.get('/api/ratings', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('ratings').select('*').order('created_at', { ascending: false });
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
 
-app.delete('/api/ratings/:id', async (req, res) => {
+app.delete('/api/ratings/:id', requireAdmin, async (req, res) => {
   const { error } = await supabase.from('ratings').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Rating deleted' });
@@ -555,13 +666,13 @@ app.post('/api/contact', async (req, res) => {
   res.status(201).json({ message: 'Message received', contact: data });
 });
 
-app.get('/api/contacts', async (req, res) => {
+app.get('/api/contacts', requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
 
-app.delete('/api/contacts/:id', async (req, res) => {
+app.delete('/api/contacts/:id', requireAdmin, async (req, res) => {
   const { error } = await supabase.from('contacts').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ message: error.message });
   res.json({ message: 'Contact deleted' });

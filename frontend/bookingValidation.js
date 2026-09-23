@@ -1,21 +1,11 @@
 // Pure validation helper: returning data instead of touching the DOM makes this easy to test.
-function validateBookingRequirements({ driverLicense, driverLicenseImage, termsAccepted }) {
+function validateBookingRequirements({ driverLicense, termsAccepted }) {
   const cleanLicense = (driverLicense || '').trim();
-  const cleanLicenseImage = typeof driverLicenseImage === 'string'
-    ? driverLicenseImage.trim()
-    : !!driverLicenseImage;
 
   if (!cleanLicense) {
     return {
       ok: false,
       message: "Driver's license or ID number is required before booking.",
-    };
-  }
-
-  if (!cleanLicenseImage) {
-    return {
-      ok: false,
-      message: "A clear photo of your driver's license is required before booking.",
     };
   }
 

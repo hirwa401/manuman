@@ -51,14 +51,20 @@ async function initPaymentPage() {
           customerName: draft.customerName,
           customerPhone: draft.customerPhone,
           driverLicense: draft.driverLicense,
-          driverLicenseImage: draft.driverLicenseImage,
           termsAccepted: draft.termsAccepted,
           userId: draft.userId,
-          idempotencyKey: draft.idempotencyKey
+          idempotencyKey: draft.idempotencyKey,
+          identityVerificationSessionId: draft.identityVerificationSessionId,
+          identityProof: draft.identityProof
         })
       });
-      const data = await res.json();
-      if (!res.ok) { msg.style.color = 'red'; msg.textContent = data.message || 'Payment setup failed'; document.getElementById('checkoutPay').disabled = false; return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        msg.style.color = 'red';
+        msg.textContent = data.message || `Payment setup failed (server returned ${res.status}).`;
+        document.getElementById('checkoutPay').disabled = false;
+        return;
+      }
       const clientSecret = data.clientSecret;
       const { error, paymentIntent } = await stripePay.confirmCardPayment(clientSecret, { payment_method: { card: stripeCard, billing_details: { name: draft.customerName, email: draft.customerEmail } } });
       if (error) { msg.style.color = 'red'; msg.textContent = error.message; document.getElementById('checkoutPay').disabled = false; return; }
@@ -80,7 +86,9 @@ async function initPaymentPage() {
         setTimeout(() => window.location.href = 'index.html', 2500);
       }
     } catch (e) {
-      msg.style.color = 'red'; msg.textContent = 'Server error. Try again later.'; document.getElementById('checkoutPay').disabled = false;
+      msg.style.color = 'red';
+      msg.textContent = e.message || 'Unable to reach the payment server. Please try again later.';
+      document.getElementById('checkoutPay').disabled = false;
     }
   });
 }

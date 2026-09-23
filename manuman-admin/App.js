@@ -11,6 +11,7 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import BookingsScreen from './src/screens/BookingsScreen';
 import FleetScreen from './src/screens/FleetScreen';
 import ContactsScreen from './src/screens/ContactsScreen';
+import { setAdminToken } from './src/api';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,19 +20,26 @@ export default function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem('adminAuthed').then(val => {
-      if (val === 'true') setAuthed(true);
+    Promise.all([AsyncStorage.getItem('adminAuthed'), AsyncStorage.getItem('adminToken')]).then(([authedValue, token]) => {
+      if (authedValue === 'true' && token) {
+        setAdminToken(token);
+        setAuthed(true);
+      }
       setChecking(false);
     });
   }, []);
 
-  async function handleLogin() {
+  async function handleLogin(token) {
+    setAdminToken(token);
     await AsyncStorage.setItem('adminAuthed', 'true');
+    await AsyncStorage.setItem('adminToken', token);
     setAuthed(true);
   }
 
   async function handleLogout() {
     await AsyncStorage.removeItem('adminAuthed');
+    await AsyncStorage.removeItem('adminToken');
+    setAdminToken(null);
     setAuthed(false);
   }
 
