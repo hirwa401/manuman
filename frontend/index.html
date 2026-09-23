@@ -13,10 +13,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Manuman" />
   <link rel="apple-touch-icon" href="images/mainsmalllogo.png" />
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body class="site-home">
+
+  <!-- Scroll progress indicator (injected by animations.js at runtime) -->
 
   <!-- NAVBAR -->
   <nav class="navbar">
@@ -48,8 +50,8 @@
   </nav>
 
   <!-- HERO -->
-  <section class="hero" id="home">
-    <div class="hero-bg">
+  <section class="hero hero-animate" id="home">
+    <div class="hero-bg" data-parallax="0.12">
       <img src="images/hero-car.jpg" alt="ManuMan Fleet" id="heroBgImg" />
       <div class="hero-overlay"></div>
     </div>
@@ -72,7 +74,7 @@
   </section>
 
   <!-- TRUST BAR -->
-  <div class="trust-bar">
+  <div class="trust-bar reveal-group" data-stagger="110">
     <div class="trust-item"><i class="fas fa-plane"></i><span>Airport Delivery</span></div>
     <div class="trust-item"><i class="fas fa-shield-alt"></i><span>Clean & Maintained</span></div>
     <div class="trust-item"><i class="fas fa-clock"></i><span>On Time. Every Time.</span></div>
@@ -83,14 +85,14 @@
   <!-- ABOUT / MISSION / VISION -->
   <section class="about" id="about">
     <div class="about-inner">
-      <div class="about-text">
+      <div class="about-text reveal fade-left">
         <div class="about-label">Who We Are</div>
         <h2>Built on Trust.<br/>Driven by Service.</h2>
         <p class="about-lead">ManuMan Mobility was founded with one simple belief — renting a car should feel as good as the trip itself. Based in Portland, Maine, we are a locally owned and operated car rental service committed to making every journey smooth, affordable, and stress-free.</p>
         <p class="about-body">We started because we saw a gap in the market — big rental companies that treat customers like numbers. We do things differently. Every vehicle in our fleet is personally maintained, thoroughly cleaned, and delivered on time. We know your time matters, and we show up for it.</p>
         <a href="booking.html" class="btn-primary" style="margin-top:8px">Book Now</a>
       </div>
-      <div class="about-cards">
+      <div class="about-cards reveal-group" data-stagger="130">
         <div class="about-card">
           <div class="about-card-icon"><i class="fas fa-bullseye"></i></div>
           <h3>Our Mission</h3>
@@ -113,11 +115,11 @@
   <!-- BOOKING WIDGET -->
   <section class="booking-section" id="booking">
     <div class="booking-section-inner">
-      <div class="booking-section-header">
+      <div class="booking-section-header reveal fade-up">
         <h2>Book Your Car</h2>
         <p>Select your dates and vehicle — we'll handle the rest</p>
       </div>
-      <form class="booking-form" id="bookingForm">
+      <form class="booking-form reveal scale-in" id="bookingForm">
         <div class="form-group">
           <label><i class="fas fa-map-marker-alt"></i> Pick-up Location</label>
           <input type="text" name="pickup" placeholder="Portland, ME / Airport" required />
@@ -142,11 +144,11 @@
   </section>
 
   <section class="fleet" id="fleet">
-    <div class="section-header">
+    <div class="section-header reveal fade-up">
       <h2>Our Fleet</h2>
       <p>Choose the perfect vehicle for your trip</p>
     </div>
-    <div class="cars-grid" id="carsGrid"><p style="text-align:center;color:#888;padding:40px">Loading fleet...</p></div>
+    <div class="cars-grid reveal-group" data-stagger="130" id="carsGrid"><p style="text-align:center;color:#888;padding:40px">Loading fleet...</p></div>
   </section>
 
   <!-- BOOKING MODAL -->
@@ -217,9 +219,10 @@
             <input type="text" id="bDriverLicense" placeholder="Driver's license or state ID number" />
           </div>
           <div class="bform-group bform-full">
-            <label><i class="fas fa-camera"></i> Driver's License Photo</label>
-            <input type="file" id="bDriverLicenseImage" accept="image/*" capture="environment" required />
-            <small style="display:block;color:#666;margin-top:6px;line-height:1.5;">Upload a clear photo of your driver's license or government ID. This is required before booking.</small>
+            <div class="terms-box" style="background:#f0f8ff;border-color:#b9d8f5;">
+              <strong><i class="fas fa-shield-alt"></i> Secure license verification</strong>
+              <small style="display:block;color:#466177;margin-top:6px;line-height:1.5;">Before payment, Stripe Identity will securely verify your driver’s license and a live selfie. ManuMan Mobility does not receive or store your license image.</small>
+            </div>
           </div>
           <div class="bform-group bform-full">
             <div class="terms-box">
@@ -426,11 +429,11 @@
 
   <!-- HOW IT WORKS -->
   <section class="how-it-works" id="how">
-    <div class="section-header light">
+    <div class="section-header light reveal fade-up">
       <h2>How It Works</h2>
       <p>Renting a car has never been easier</p>
     </div>
-    <div class="steps">
+    <div class="steps reveal-group" data-stagger="140">
       <div class="step">
         <div class="step-icon"><i class="fas fa-search"></i></div>
         <h3>1. Choose Your Car</h3>
@@ -453,11 +456,11 @@
 
   <!-- WHY US -->
   <section class="why-us" id="why">
-    <div class="section-header">
+    <div class="section-header reveal fade-up">
       <h2>Why Choose ManuMan Mobility?</h2>
       <p>Portland, Maine's most trusted car rental service</p>
     </div>
-    <div class="why-grid">
+    <div class="why-grid reveal-group" data-stagger="120">
       <div class="why-card">
         <i class="fas fa-star"></i>
         <h3>5-Star Turo Host</h3>
@@ -483,10 +486,10 @@
 
   <!-- TESTIMONIALS -->
   <section class="testimonials">
-    <div class="section-header light">
+    <div class="section-header light reveal fade-up">
       <h2>What Our Customers Say</h2>
     </div>
-    <div class="testimonials-grid">
+    <div class="testimonials-grid reveal-group" data-stagger="130">
       <div class="testimonial-card">
         <div class="stars">★★★★★</div>
         <p>"Amazing experience! The car was spotless and delivered right to the airport. Will definitely rent again."</p>
@@ -507,7 +510,7 @@
 
   <!-- RATING SECTION -->
   <section class="rating-section" id="rate">
-    <form class="rating-form" id="ratingForm">
+    <form class="rating-form reveal fade-in" id="ratingForm">
       <span class="rating-label">Enjoyed your ride? Rate us</span>
       <div class="star-picker" id="starPicker">
         <i class="fas fa-star" data-val="1"></i>
@@ -525,12 +528,12 @@
 
   <!-- CONTACT -->
   <section class="contact" id="contact">
-    <div class="section-header">
+    <div class="section-header reveal fade-up">
       <h2>Get In Touch</h2>
       <p>We're here to help — call, email, or send us a message</p>
     </div>
     <div class="contact-wrapper">
-      <div class="contact-info">
+      <div class="contact-info reveal fade-left">
         <div class="contact-item">
           <i class="fas fa-phone"></i>
           <div>
@@ -568,7 +571,7 @@
         </div>
       </div>
 
-      <form class="contact-form" id="contactForm">
+      <form class="contact-form reveal fade-right" id="contactForm">
         <input type="text" name="name" placeholder="Your Name" required />
         <input type="email" name="email" placeholder="Your Email" required />
         <input type="tel" name="phone" placeholder="Your Phone (optional)" />
@@ -691,6 +694,7 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script src="config.js?v=3"></script>
   <script src="bookingValidation.js?v=3"></script>
+  <script src="animations.js?v=2"></script>
   <script src="app.js?v=4"></script>
   <script>
     if ('serviceWorker' in navigator) {

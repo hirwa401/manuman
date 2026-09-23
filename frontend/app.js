@@ -252,12 +252,9 @@ navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => na
 function scheduleNavClose() {
   clearTimeout(navCloseTimer);
   navCloseTimer = setTimeout(() => navLinks.classList.remove('open'), 180);
-}
-
-window.addEventListener('scroll', () => {
-  document.querySelector('.navbar').style.boxShadow =
-    window.scrollY > 50 ? '0 2px 20px rgba(0,0,0,0.4)' : 'none';
-});
+}  // Navbar scroll state is handled by animations.js (.navbar-scrolled class).
+  // The old inline box-shadow writer was removed to avoid fighting the class
+  // transition on every frame.
 
 // ── DATE DEFAULTS ─────────────────────────────────────────
 const today = new Date().toISOString().split('T')[0];
@@ -293,7 +290,7 @@ async function loadFleet(attempt = 1) {
       });
     }
       grid.innerHTML = fleet.map((car, i) => `
-        <div class="car-card ${i === 1 ? 'featured' : ''}" role="button" tabindex="0" onclick='openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})' onkeydown='if(event.key === "Enter" || event.key === " "){event.preventDefault();openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})}'>
+        <div class="car-card reveal-item ${i === 1 ? 'featured' : ''}" role="button" tabindex="0" onclick='openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})' onkeydown='if(event.key === "Enter" || event.key === " "){event.preventDefault();openVehicleDetails(${JSON.stringify(car).replace(/'/g, '&#39;')})}'>
           <div class="car-badge">${car.category}</div>
           ${i === 1 ? '<div class="featured-tag">Most Popular</div>' : ''}
           <div class="car-image-wrap">
@@ -315,6 +312,7 @@ async function loadFleet(attempt = 1) {
             </div>
           </div>
         </div>`).join('');
+      if (window.ManuManAnimations) window.ManuManAnimations.restagger(grid);
   } catch {
     if (attempt < 3) {
       setTimeout(() => loadFleet(attempt + 1), 2000);
@@ -352,7 +350,7 @@ async function openBookingModal(car) {
 
   pickupIsHQ = true;
   setPickupHQ();
-  ['bPickup','bPickupDate','bReturnDate','bName','bEmail','bPhone','bDriverLicense','bDriverLicenseImage'].forEach(id => {
+  ['bPickup','bPickupDate','bReturnDate','bName','bEmail','bPhone','bDriverLicense'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -489,21 +487,6 @@ function toggleTermsPolicy() {
   policy.style.display = policy.style.display === 'none' ? 'block' : 'none';
 }
 
-async function uploadDriverLicensePhoto(file) {
-  if (!file) throw new Error("A clear photo of your driver's license is required before booking.");
-
-  const response = await fetch(`${API}/upload`, {
-    method: 'POST',
-    headers: { 'Content-Type': file.type || 'image/jpeg' },
-    body: await file.arrayBuffer()
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || 'Could not upload your license photo.');
-  if (!data.url) throw new Error('The uploaded license photo could not be saved.');
-  return data.url;
-}
-
 async function goToPayment() {
   const pickup = pickupIsHQ ? 'Headquarters' : document.getElementById('bPickup').value.trim();
   const pickupDate = document.getElementById('bPickupDate').value;
@@ -511,7 +494,6 @@ async function goToPayment() {
   const name = document.getElementById('bName').value.trim();
   const email = document.getElementById('bEmail').value.trim();
   const driverLicense = document.getElementById('bDriverLicense').value.trim();
-  const driverLicenseFile = document.getElementById('bDriverLicenseImage')?.files?.[0] || null;
   const termsAccepted = document.getElementById('bTermsAccepted').checked;
   const err = document.getElementById('bError');
 
@@ -523,15 +505,11 @@ async function goToPayment() {
   if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email.'; return; }
 
   const validation = typeof validateBookingRequirements === 'function'
-    ? validateBookingRequirements({ driverLicense, driverLicenseImage: driverLicenseFile, termsAccepted })
-    : { ok: !!(driverLicense && driverLicenseFile && termsAccepted), message: 'Please enter your driver license, upload your photo, and agree to the terms.' };
+    ? validateBookingRequirements({ driverLicense, termsAccepted })
+    : { ok: !!(driverLicense && termsAccepted), message: 'Please enter your driver license and agree to the terms.' };
   if (!validation.ok) { err.textContent = validation.message; return; }
 
   try {
-    err.textContent = 'Uploading your driver\'s license photo...';
-    const driverLicenseImage = await uploadDriverLicensePhoto(driverLicenseFile);
-    err.textContent = '';
-
     const days = Math.ceil((new Date(returnDate) - new Date(pickupDate)) / 86400000);
     if (days <= 0) { err.textContent = 'Return date must be after pick-up date.'; return; }
     const deliveryFee = pickupIsHQ ? 0 : 100;
@@ -545,12 +523,21 @@ async function goToPayment() {
       vehicleImage: selectedCar.image_url || '',
       customerName: name, customerEmail: email,
       customerPhone: document.getElementById('bPhone').value.trim(),
-      driverLicense, driverLicenseImage, termsAccepted,
+      driverLicense, termsAccepted,
       paymentMethod: 'card', totalAmount: total, deliveryFee,
       userId: currentUser?.id || null
     };
+    err.textContent = 'Opening secure license verification...';
+    const response = await fetch(`${API}/identity/verification-sessions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerEmail: email, returnUrl: `${window.location.origin}/identity-complete.html` })
+    });
+    const verification = await response.json().catch(() => ({}));
+    if (!response.ok || !verification.url) throw new Error(verification.message || 'Could not start license verification.');
+    draft.identityVerificationSessionId = verification.id;
+    draft.identityProof = verification.proof;
     sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
-    window.location.href = 'payment.html';
+    window.location.href = verification.url;
   } catch (error) {
     err.textContent = error.message || 'Please upload a valid driver\'s license photo.';
   }
@@ -758,5 +745,4 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
     msg.textContent = '❌ Server offline. Please call 207-245-0080.';
   }
 });
-
 

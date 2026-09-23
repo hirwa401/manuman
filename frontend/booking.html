@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Book a Car — ManuMan Mobility</title>
   <link rel="icon" type="image/png" href="images/mainsmalllogo.png"/>
-  <link rel="stylesheet" href="style.css?v=2"/>
+  <link rel="stylesheet" href="style.css?v=4"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     .booking-page { background: #f4f6f9; min-height: 100vh; padding: 100px 24px 60px; }
@@ -100,10 +100,18 @@
     .leg-booked { background:#ffebee; border:1px solid #ef9a9a; }
     .leg-selected { background:#F5A800; }
     @media (max-width: 600px) {
+      .booking-page { padding: 82px 12px 40px; }
       .bpage-card { padding: 24px 18px; }
       .bpage-grid { grid-template-columns: 1fr; }
       .bpage-group.full { grid-column: 1; }
-      .car-select-grid { grid-template-columns: 1fr 1fr; }
+      /* A single vertical column prevents narrow, uneven vehicle cards and
+         keeps the fleet in the same order as the inventory. */
+      .car-select-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+      .car-select-card { width: 100%; }
+      .car-select-card img { height: 190px; }
+      .car-select-info { padding: 16px; }
+      .car-select-footer { gap: 12px; }
+      .car-select-btn { flex-shrink: 0; padding: 10px 16px; }
     }
   </style>
 </head>
@@ -119,13 +127,13 @@
 
   <div class="booking-page">
     <div class="booking-page-inner">
-      <div class="booking-page-header">
+      <div class="booking-page-header reveal fade-up">
         <h1>Book Your Car</h1>
         <p>Fill in your details below and we'll confirm your reservation</p>
       </div>
 
       <!-- STEP 1: Choose Car -->
-      <div class="bpage-card">
+      <div class="bpage-card reveal fade-up">
         <h2><i class="fas fa-car"></i> Choose Your Vehicle</h2>
         <div class="fleet-search">
           <i class="fas fa-search"></i>
@@ -137,7 +145,7 @@
       </div>
 
       <!-- STEP 2: Dates & Pickup -->
-      <div class="bpage-card">
+      <div class="bpage-card reveal fade-up">
         <h2><i class="fas fa-calendar-alt"></i> Dates & Pick-up</h2>
         <div class="bpage-grid">
           <div class="bpage-group full">
@@ -184,12 +192,12 @@
       </div>
 
       <!-- STEP 3: Customer Info -->
-      <div class="bpage-card">
+      <div class="bpage-card reveal fade-up">
         <h2><i class="fas fa-user"></i> Your Details</h2>
         <div class="bpage-grid">
           <div class="bpage-group">
             <label><i class="fas fa-user"></i> Full Name</label>
-            <input type="text" id="bName" placeholder="John Doe"/>
+            <input type="text" id="bName" placeholder="name"/>
           </div>
           <div class="bpage-group">
             <label><i class="fas fa-envelope"></i> Email</label>
@@ -204,9 +212,10 @@
             <input type="text" id="bDriverLicense" placeholder="License or state ID number"/>
           </div>
           <div class="bpage-group full">
-            <label><i class="fas fa-camera"></i> Driver's License Photo</label>
-            <input type="file" id="bDriverLicenseImage" accept="image/*" capture="environment" required style="border:1.5px solid #e0e0e0;border-radius:8px;padding:10px;font-size:0.88rem"/>
-            <small style="color:#888;margin-top:4px;line-height:1.5">Upload a clear photo of your driver's license or government ID. Required before booking.</small>
+            <div class="terms-box" style="background:#f0f8ff;border-color:#b9d8f5">
+              <strong><i class="fas fa-shield-alt"></i> Secure license verification</strong>
+              <small style="display:block;color:#466177;margin-top:6px;line-height:1.5">Before payment, Stripe Identity securely verifies your driver’s license and a live selfie. ManuMan Mobility does not receive or store your license image.</small>
+            </div>
           </div>
           <div class="bpage-group full">
             <div class="terms-box">
@@ -242,6 +251,7 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script src="config.js?v=3"></script>
   <script src="bookingValidation.js?v=3"></script>
+  <script src="animations.js?v=2"></script>
   <script src="booking.js?v=3"></script>
 </body>
 </html>

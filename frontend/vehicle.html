@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vehicle Details - ManuMan Mobility</title>
   <link rel="icon" type="image/png" href="images/mainsmalllogo.png" />
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     .vehicle-page { min-height: 100vh; background: #f4f6f9; padding: 112px 24px 64px; }
@@ -65,6 +65,7 @@
   </main>
 
   <script src="config.js?v=3"></script>
+  <script src="animations.js?v=2"></script>
   <script>
     const vehicleId = new URLSearchParams(window.location.search).get('id');
     const pageContent = document.getElementById('vehiclePageContent');
@@ -82,8 +83,8 @@
       pageContent.innerHTML = `
         <a class="vehicle-back" href="index.html#fleet"><i class="fas fa-arrow-left"></i> Back to fleet</a>
         <article class="vehicle-detail-layout">
-          <div class="vehicle-detail-media"><img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" onerror="this.src='images/fleet-card.png'" /></div>
-          <div class="vehicle-detail-info">
+          <div class="vehicle-detail-media reveal-clip"><img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" onerror="this.src='images/fleet-card.png'" /></div>
+          <div class="vehicle-detail-info reveal fade-right">
             <span class="vehicle-detail-badge">${escapeHtml(car.category || 'Vehicle')}</span>
             <span class="vehicle-detail-year">${escapeHtml(car.year || '')}</span>
             <h1>${escapeHtml(`${car.make || ''} ${car.model || ''}`.trim())}</h1>
@@ -98,6 +99,13 @@
             </div>
           </div>
         </article>`;
+      // Cinematic image reveal + info panel entrance after dynamic render.
+      if (window.ManuManAnimations) {
+        var clip = pageContent.querySelector('.reveal-clip');
+        var info = pageContent.querySelector('.reveal');
+        if (clip) window.ManuManAnimations.observeClip(clip);
+        if (info) window.ManuManAnimations.observe(info);
+      }
     }
 
     async function loadVehicle() {

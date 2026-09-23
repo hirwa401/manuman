@@ -1525,3 +1525,163 @@ img { max-width: 100%; display: block; }
   .site-home .booking-section-header { text-align: center; }
   .site-home .about, .site-home .fleet, .site-home .why-us, .site-home .testimonials, .site-home .contact { padding-top: 72px; padding-bottom: 78px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════ */
+/* SCROLL ANIMATION SYSTEM — shared by all public pages.              */
+/* Transform/opacity only; JS (animations.js) adds .pre-reveal before  */
+/* observing, so content is never hidden when JS is unavailable.       */
+/* ══════════════════════════════════════════════════════════════════ */
+:root {
+  --anim-duration: 0.7s;
+  --anim-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Pre-reveal state: JS-applied only; content stays hidden until the     */
+/* IntersectionObserver fires. Without JS this class never exists, so    */
+/* all content remains fully visible.                                    */
+.pre-reveal { opacity: 0; }
+
+/* Reveal keyframe: only a from-keyframe, so the implied end state is    */
+/* each element's natural style — base transforms (e.g. the tilted       */
+/* booking form) are preserved instead of being flattened to "none".     */
+@keyframes mm-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--mm-x, 0px), var(--mm-y, 28px), 0) scale(var(--mm-s, 1));
+  }
+}
+
+/* Variant classes persist on elements and only set offsets. */
+.reveal.fade-up    { --mm-y: 32px;  --mm-x: 0px;   --mm-s: 1; }
+.reveal.fade-in    { --mm-y: 0px;   --mm-x: 0px;   --mm-s: 1; }
+.reveal.fade-left  { --mm-x: -36px; --mm-y: 0px;   --mm-s: 1; }
+.reveal.fade-right { --mm-x: 36px;  --mm-y: 0px;   --mm-s: 1; }
+.reveal.scale-in   { --mm-s: 0.96;  --mm-x: 0px;   --mm-y: 0px; }
+
+/* Entrance runs once when the observer adds .is-visible. */
+.reveal.is-visible {
+  animation: mm-reveal var(--anim-duration) var(--anim-ease) both;
+}
+
+/* ── Stagger groups: children animate individually, ~120ms apart ───── */
+/* Delays are passed as the --mm-delay custom property from JS, so they  */
+/* never touch the transition property that powers hover effects.        */
+.reveal-group.is-visible > .reveal-item {
+  animation: mm-reveal var(--anim-duration) var(--anim-ease) both;
+  animation-delay: var(--mm-delay, 0ms);
+}
+.reveal-group.pre-reveal > .reveal-item { opacity: 0; }
+
+/* Once the entrance completes, JS adds .reveal-done to release the      */
+/* animation fill so hover/interaction transitions behave normally.      */
+.reveal.reveal-done,
+.reveal-group.reveal-done > .reveal-item {
+  animation: none !important;
+}
+
+/* ── Cinematic image reveal: clip-path wipe + gentle settle ───────── */
+.reveal-clip {
+  overflow: hidden;
+}
+.reveal-clip img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.js-anim .reveal-clip.reveal-pending img {
+  transform: scale(1.05);
+}
+.js-anim .reveal-clip.reveal-pending {
+  clip-path: inset(0 0 100% 0);
+}
+.reveal-clip.reveal-shown {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.9s var(--anim-ease);
+}
+.reveal-clip.reveal-shown img {
+  transform: scale(1);
+  transition: transform 1.1s var(--anim-ease);
+}
+
+/* Anchor targets land below the floating navbar instead of under it. */
+section[id] { scroll-margin-top: 110px; }
+
+/* ── Hero entrance choreography (class .hero-animate on <section>) ── */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Opacity-only so the parallax inline transform on .hero-bg is never    */
+/* fought by this entrance animation (the img's hero-drift handles zoom). */
+@keyframes hero-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.hero-animate .hero-in {
+  opacity: 0;
+  animation: hero-rise 0.8s var(--anim-ease) forwards;
+}
+.hero-animate .hero-bg-in {
+  opacity: 0;
+  animation: hero-bg-in 1.4s var(--anim-ease) forwards;
+}
+
+/* ── Scroll progress indicator — thin gold line at the very top ───── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2000;
+  pointer-events: none;
+  background: transparent;
+}
+.scroll-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--gold), #ffd166);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  box-shadow: 0 0 8px rgba(245, 168, 0, 0.4);
+}
+
+/* ── Navbar compact/scrolled state (class toggle from animations.js) ─ */
+.navbar {
+  transition: box-shadow 0.4s var(--anim-ease), background 0.4s var(--anim-ease), transform 0.4s var(--anim-ease), top 0.4s var(--anim-ease);
+}
+.navbar.navbar-scrolled {
+  top: 10px;
+  transform: translateY(0);
+  box-shadow: 0 10px 28px rgba(3, 12, 24, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.site-home .navbar.navbar-scrolled {
+  background: rgba(18, 55, 68, 0.94);
+  box-shadow: 0 12px 30px rgba(18, 55, 68, 0.28);
+}
+
+/* ── Respect users who prefer reduced motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pre-reveal,
+  .reveal-group.pre-reveal > .reveal-item { opacity: 1 !important; }
+  .reveal.is-visible,
+  .reveal-group.is-visible > .reveal-item { animation: none !important; }
+  .hero-animate .hero-in,
+  .hero-animate .hero-bg-in { opacity: 1 !important; animation: none !important; }
+  .js-anim .reveal-clip.reveal-pending { clip-path: none !important; }
+  .reveal-clip img { transform: none !important; transition: none !important; }
+  .scroll-progress { display: none; }
+  .navbar, .navbar.navbar-scrolled { transition: none !important; }
+  .hero-bg img { animation: none !important; }
+  .hero-scroll-hint { animation: none !important; }
+}
+
+/* ── Small screens: lighter movement, no parallax (JS already skips) ─ */
+@media (max-width: 768px) {
+  .reveal.fade-up    { --mm-y: 20px; }
+  .reveal.fade-left  { --mm-x: -16px; }
+  .reveal.fade-right { --mm-x: 16px; }
+  section[id] { scroll-margin-top: 96px; }
+}
+

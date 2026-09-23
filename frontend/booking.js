@@ -19,6 +19,8 @@ async function loadFleet() {
     allFleet = await res.json();
     if (!allFleet.length) { grid.innerHTML = '<p style="color:#aaa">No vehicles available right now.</p>'; return; }
     renderCarGrid(allFleet);
+    // Stagger the initial reveal only; search/selection re-renders show instantly.
+    if (window.ManuManAnimations) window.ManuManAnimations.restagger(grid);
   } catch {
     grid.innerHTML = '<p style="color:#e74c3c">Could not load fleet. Please call 207-245-0080.</p>';
   }
@@ -179,7 +181,6 @@ async function submitBookingPage() {
   const email = document.getElementById('bEmail').value.trim();
   const phone = document.getElementById('bPhone').value.trim();
   const driverLicense = document.getElementById('bDriverLicense').value.trim();
-  const driverLicenseFile = document.getElementById('bDriverLicenseImage')?.files?.[0] || null;
   const termsAccepted = document.getElementById('bTermsAccepted').checked;
 
   if (!pickupIsHQ && !pickup) { err.textContent = 'Please enter a delivery address.'; return; }
@@ -189,21 +190,12 @@ async function submitBookingPage() {
   if (!name) { err.textContent = 'Please enter your full name.'; return; }
   if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email.'; return; }
   if (!driverLicense) { err.textContent = "Please enter your driver's license number."; return; }
-  if (!driverLicenseFile) { err.textContent = "Please upload a photo of your driver's license."; return; }
   if (!termsAccepted) { err.textContent = 'Please agree to the Terms & Conditions.'; return; }
 
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting verification...';
 
   try {
-    const res = await fetch(`${API_URL}/upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': driverLicenseFile.type || 'image/jpeg' },
-      body: await driverLicenseFile.arrayBuffer()
-    });
-    const uploadData = await res.json();
-    if (!res.ok || !uploadData.url) throw new Error(uploadData.message || 'License photo upload failed.');
-
     const days = Math.ceil((new Date(returnDate) - new Date(pickupDate)) / 86400000);
     const deliveryFee = pickupIsHQ ? 0 : 100;
     const base = days * Number(selectedCar.price);
@@ -215,18 +207,26 @@ async function submitBookingPage() {
       vehicle: selectedCar.id,
       vehicleName: `${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`,
       customerName: name, customerEmail: email, customerPhone: phone,
-      driverLicense, driverLicenseImage: uploadData.url,
+      driverLicense,
       termsAccepted: true,
       paymentMethod: 'card',
       totalAmount: total, deliveryFee,
       userId: null
     };
+    const response = await fetch(`${API_URL}/identity/verification-sessions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerEmail: email, returnUrl: `${window.location.origin}/identity-complete.html` })
+    });
+    const verification = await response.json().catch(() => ({}));
+    if (!response.ok || !verification.url) throw new Error(verification.message || 'Could not start license verification.');
+    draft.identityVerificationSessionId = verification.id;
+    draft.identityProof = verification.proof;
     sessionStorage.setItem('pendingBooking', JSON.stringify(draft));
-    window.location.href = 'payment.html';
+    window.location.href = verification.url;
   } catch (e) {
     err.textContent = e.message || 'Something went wrong. Please try again.';
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-lock"></i> Continue to Payment';
+    btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify License & Continue';
   }
 }
 
