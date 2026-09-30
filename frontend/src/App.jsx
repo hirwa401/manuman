@@ -10,7 +10,6 @@ import Signup from './pages/Signup';
 import Host from './pages/Host';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
-import GlassToggle from './components/GlassToggle';
 
 function ScrollManager() {
   const { pathname, hash } = useLocation();
@@ -31,7 +30,6 @@ export default function App() {
   return (
     <>
       <ScrollManager />
-      <GlassToggle />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/vehicle/:id" element={<Vehicle />} />
