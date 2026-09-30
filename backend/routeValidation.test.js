@@ -54,7 +54,10 @@ test('admin-only API routes require a signed admin token', () => {
 test('payment routes report missing Stripe configuration and keep useful client errors', () => {
   assert.match(apiIndexJs, /STRIPE_WEBHOOK_SECRET/);
   assert.match(apiIndexJs, /Card payments are temporarily unavailable/);
-  const paymentJs = fs.readFileSync('./frontend/payment.js', 'utf8');
-  assert.match(paymentJs, /server returned \$\{res\.status\}/);
-  assert.match(paymentJs, /e\.message/);
+  // The client is now a React SPA; apiFetch surfaces the HTTP status and
+  // Payment.jsx displays the resulting error message.
+  const apiJs = fs.readFileSync('./frontend/src/lib/api.js', 'utf8');
+  const paymentJsx = fs.readFileSync('./frontend/src/pages/Payment.jsx', 'utf8');
+  assert.match(apiJs, /Request failed \(\$\{res\.status\}\)/);
+  assert.match(paymentJsx, /e\.message \|\|/);
 });

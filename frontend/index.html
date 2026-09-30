@@ -2,17 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ManuMan Mobility – Reliable Cars. Exceptional Experiences.</title>
     <link rel="icon" type="image/png" href="/images/mainsmalllogo.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0d1b2a" />
+    <meta name="color-scheme" content="light" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Manuman" />
     <link rel="apple-touch-icon" href="/images/mainsmalllogo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script>
+      // Apply saved glass level before first paint (no flash of wrong intensity).
+      (function () {
+        try {
+          var v = localStorage.getItem('manuman.glass');
+          if (['off', 'low', 'normal', 'high'].indexOf(v) === -1) v = 'normal';
+          document.documentElement.setAttribute('data-glass', v);
+        } catch (e) {
+          document.documentElement.setAttribute('data-glass', 'normal');
+        }
+      })();
+    </script>
     <meta name="description" content="Portland, Maine's trusted car rental — clean vehicles, on-time delivery, and 5-star service every time." />
   </head>
   <body>
