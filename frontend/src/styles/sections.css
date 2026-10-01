@@ -463,6 +463,7 @@
   position: relative;
   background: var(--navy);
   aspect-ratio: 4/3;
+  max-height: 420px;
 }
 .vehicle-main-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
 .vehicle-main-img:hover img { transform: scale(1.02); }
