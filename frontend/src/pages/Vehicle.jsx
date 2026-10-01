@@ -81,7 +81,7 @@ export default function Vehicle() {
                 </div>
                 {allImages.length > 1 && (
                   <div className="vehicle-thumbs">
-                    {allImages.map((img, i) => (
+                    {allImages.slice(0, 4).map((img, i) => (
                       <button
                         key={img}
                         type="button"
@@ -92,6 +92,17 @@ export default function Vehicle() {
                         <img src={img} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
                       </button>
                     ))}
+                    {allImages.length > 4 && (
+                      <button
+                        type="button"
+                        className="vehicle-thumb vehicle-thumb-more"
+                        onClick={() => setGalleryOpen(true)}
+                        aria-label="View all photos"
+                      >
+                        <img src={allImages[4]} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
+                        <span>+{allImages.length - 4}<br />more</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
