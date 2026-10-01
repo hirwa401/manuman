@@ -1072,3 +1072,115 @@
 }
 .faq-teaser-item h3 i { color: var(--gold); font-size: 0.85rem; }
 .faq-teaser-item p { color: rgba(255,255,255,0.65); font-size: 0.88rem; line-height: 1.6; margin: 0; }
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE — mobile-first fixes for all pages
+   ══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Hero ── */
+  .hero-content { padding: 100px 16px 80px; }
+  .hero-stats { gap: 16px; }
+  .hero-stat-divider { display: none; }
+
+  /* ── Trust bar ── */
+  .trust-bar { gap: 14px; padding: 14px 16px; }
+  .trust-item { font-size: 0.82rem; }
+
+  /* ── Sections general ── */
+  .about, .fleet, .how-it-works, .why-us,
+  .testimonials, .rating-section, .contact,
+  .airport-section, .faq-teaser { padding: 60px 16px; }
+
+  /* ── Steps ── */
+  .steps { flex-direction: column; align-items: center; gap: 16px; }
+  .step { min-width: 0; width: 100%; max-width: 100%; }
+
+  /* ── Fleet grid ── */
+  .cars-grid { grid-template-columns: 1fr; gap: 18px; }
+
+  /* ── Vehicle page ── */
+  .vehicle-info-col { padding: 22px 18px; }
+  .vehicle-specs-grid { grid-template-columns: repeat(2, 1fr); }
+  .vehicle-protection-section { padding: 24px 18px; }
+  .vehicle-cta { flex-direction: column; }
+  .vehicle-book-btn { min-width: 0; width: 100%; }
+  .vehicle-thumbs { gap: 6px; }
+  .vehicle-thumb { width: 60px; height: 46px; }
+
+  /* ── Booking confirmation ── */
+  .confirmation-hero { padding: 32px 18px; border-radius: 14px; }
+  .confirmation-hero h1 { font-size: 1.5rem; }
+  .confirmation-card { padding: 20px 18px; }
+  .confirmation-actions { flex-direction: column; }
+  .confirmation-actions .btn { width: 100%; justify-content: center; }
+
+  /* ── My Bookings ── */
+  .my-bookings-header h1 { font-size: 1.5rem; flex-direction: column; gap: 6px; }
+  .my-booking-header { padding: 14px 16px; }
+  .my-booking-details { padding: 0 16px 18px; }
+  .my-booking-meta { gap: 8px; }
+  .my-booking-actions { flex-direction: column; }
+  .my-booking-actions .btn { width: 100%; justify-content: center; }
+  .my-bookings-help { flex-direction: column; gap: 10px; }
+
+  /* ── FAQ page ── */
+  .faq-header { margin-bottom: 28px; }
+  .faq-question { padding: 14px 16px; font-size: 0.9rem; }
+  .faq-answer { padding: 0 16px 14px; padding-top: 12px; }
+  .faq-cta { padding: 28px 20px; border-radius: 14px; }
+  .faq-cta h2 { font-size: 1.25rem; }
+  .faq-cta-actions { flex-direction: column; align-items: stretch; }
+  .faq-cta-actions .btn { justify-content: center; }
+
+  /* ── Airport pickup page ── */
+  .airport-info-bar { grid-template-columns: 1fr 1fr; padding: 18px 16px; gap: 12px; }
+  .airport-step { padding: 16px 18px; gap: 14px; }
+  .airport-faq-grid { grid-template-columns: 1fr; }
+  .airport-cta { padding: 28px 20px; border-radius: 14px; }
+  .airport-cta h2 { font-size: 1.25rem; }
+  .airport-cta-actions { flex-direction: column; align-items: stretch; }
+  .airport-cta-actions .btn { justify-content: center; }
+
+  /* ── Cancellation policy ── */
+  .policy-contact-box { padding: 22px 18px; }
+  .policy-contact-actions { flex-direction: column; }
+  .policy-contact-actions .btn { width: 100%; justify-content: center; }
+
+  /* ── Checkout / Payment ── */
+  .checkout-card { padding: 20px 16px; }
+
+  /* ── Host dashboard ── */
+  .earnings-box { grid-template-columns: 1fr; }
+  .host-wrap { padding: 28px 16px 48px; }
+
+  /* ── Footer ── */
+  .footer-top { padding: 40px 16px 28px; }
+}
+
+@media (max-width: 480px) {
+
+  /* ── Vehicle specs collapse to 1 col ── */
+  .vehicle-specs-grid { grid-template-columns: 1fr; }
+
+  /* ── Airport info bar ── */
+  .airport-info-bar { grid-template-columns: 1fr; }
+
+  /* ── Booking page cards ── */
+  .booking-page-header h1 { font-size: 1.6rem; }
+  .page-card { padding: 20px 14px; }
+
+  /* ── Confirmation ref wraps ── */
+  .confirmation-ref { font-size: 0.8rem; padding: 6px 12px; }
+
+  /* ── My bookings header ── */
+  .my-booking-vehicle strong { font-size: 0.92rem; }
+  .my-booking-amount { font-size: 0.95rem; }
+
+  /* ── Policy page ── */
+  .policy-contact-box { padding: 18px 14px; }
+
+  /* ── Hero stats single column ── */
+  .hero-stats { flex-direction: column; gap: 10px; align-items: center; }
+}
