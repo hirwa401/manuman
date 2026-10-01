@@ -272,10 +272,17 @@ export default function Booking() {
                 <div className="bsummary-row"><span>Vehicle</span><strong>{selectedCar.year} {selectedCar.make} {selectedCar.model}</strong></div>
                 <div className="bsummary-row"><span>Duration</span><strong>{pricing.days} day{pricing.days > 1 ? 's' : ''}{pricing.discount ? ' 🏷️ -10%' : ''}</strong></div>
                 <div className="bsummary-row"><span>Rate</span><strong>${selectedCar.price}/day</strong></div>
+                {pricing.discount > 0 && (
+                  <div className="bsummary-row"><span>Weekly discount</span><strong style={{ color: '#2ecc71' }}>-${pricing.discount}</strong></div>
+                )}
                 {pricing.deliveryFee > 0 && (
                   <div className="bsummary-row"><span>Delivery Fee</span><strong>+${pricing.deliveryFee}</strong></div>
                 )}
                 <div className="bsummary-row total"><span>Total</span><strong>${pricing.total}</strong></div>
+              </div>
+              <div style={{ marginTop: 12, fontSize: '0.82rem', color: '#888', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <i className="fas fa-info-circle" style={{ color: 'var(--gold-dark)', marginTop: 2 }} />
+                <span>Security deposit discussed at pickup. See our <a href="/cancellation-policy" style={{ color: 'var(--navy)', fontWeight: 700 }}>Cancellation Policy</a> before booking.</span>
               </div>
             </div>
           )}

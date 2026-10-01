@@ -264,7 +264,7 @@ input, select, textarea { font-family: inherit; }
   margin: 0 auto;
   padding: 56px 24px 36px;
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
   gap: 40px;
 }
 .footer-brand img { height: 46px; border-radius: 8px; margin-bottom: 14px; }
@@ -289,7 +289,12 @@ input, select, textarea { font-family: inherit; }
 .footer-socials a:hover { background: var(--gold); color: var(--navy); transform: translateY(-2px); }
 .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .footer-bottom p { max-width: 1200px; margin: 0 auto; padding: 18px 24px; font-size: 0.82rem; color: rgba(255,255,255,0.45); }
-@media (max-width: 760px) { .footer-top { grid-template-columns: 1fr; gap: 28px; } }
+.footer-contact p a { color: rgba(255,255,255,0.7); text-decoration: none; }
+.footer-contact p a:hover { color: var(--gold); }
+.footer-bottom p a { color: rgba(255,255,255,0.55); text-decoration: none; }
+.footer-bottom p a:hover { color: var(--gold); }
+@media (max-width: 900px) { .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; } }
+@media (max-width: 560px) { .footer-top { grid-template-columns: 1fr; gap: 28px; } }
 
 /* ── SECTIONS / HEADINGS ─────────────────────────────── */
 .section-header { text-align: center; margin-bottom: 44px; }

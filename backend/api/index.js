@@ -479,11 +479,31 @@ async function fleetWrite(operation, payload) {
   return operation(values);
 }
 
+function buildFleetPayload(body, extra = {}) {
+  const { year, make, model, category, price, image_url, features, interior_images,
+    seats, doors, transmission, fuel_type, mpg, mileage, luggage_capacity,
+    mileage_allowance, extra_mile_price, deposit, cancellation_policy, damage_notes, available } = body;
+  const payload = {
+    year, make, model, category, price: Number(price),
+    image_url: image_url || '',
+    features: features || [],
+    interior_images: interior_images || [],
+    ...extra,
+  };
+  if (available !== undefined) payload.available = available;
+  const specFields = { seats, doors, transmission, fuel_type, mpg, mileage, luggage_capacity,
+    mileage_allowance, extra_mile_price, deposit, cancellation_policy, damage_notes };
+  for (const [k, v] of Object.entries(specFields)) {
+    if (v !== undefined) payload[k] = v;
+  }
+  return payload;
+}
+
 app.post('/api/fleet', requireAdmin, async (req, res) => {
-  const { year, make, model, category, price, image_url, features, interior_images } = req.body;
+  const { year, make, model, category, price } = req.body;
   if (!year || !make || !model || !category || !price)
     return res.status(400).json({ message: 'year, make, model, category and price are required.' });
-  const payload = { year, make, model, category, price: Number(price), image_url: image_url || '', features: features || [], interior_images: interior_images || [], available: true, approved: true };
+  const payload = buildFleetPayload(req.body, { available: true, approved: true });
   const { data, error } = await fleetWrite(
     values => supabase.from('fleet').insert([values]).select().single(),
     payload
@@ -493,8 +513,7 @@ app.post('/api/fleet', requireAdmin, async (req, res) => {
 });
 
 app.put('/api/fleet/:id', requireAdmin, async (req, res) => {
-  const { year, make, model, category, price, image_url, features, available, interior_images } = req.body;
-  const payload = { year, make, model, category, price: Number(price), image_url, features, available, interior_images: interior_images || [] };
+  const payload = buildFleetPayload(req.body);
   const { data, error } = await fleetWrite(
     values => supabase.from('fleet').update(values).eq('id', req.params.id).select().single(),
     payload

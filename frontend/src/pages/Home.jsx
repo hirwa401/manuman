@@ -230,12 +230,18 @@ export default function Home() {
           <div className="step">
             <div className="step-icon"><i className="fas fa-calendar-alt" /></div>
             <h3>2. Book Online</h3>
-            <p>Select your dates, fill in your details, and confirm your reservation instantly.</p>
+            <p>Select your dates, verify your license securely, and confirm your reservation.</p>
+          </div>
+          <div className="step-arrow"><i className="fas fa-chevron-right" /></div>
+          <div className="step">
+            <div className="step-icon"><i className="fas fa-id-card" /></div>
+            <h3>3. Verify &amp; Pay</h3>
+            <p>Your driver's license is verified by Stripe. Pay securely — no hidden fees.</p>
           </div>
           <div className="step-arrow"><i className="fas fa-chevron-right" /></div>
           <div className="step">
             <div className="step-icon"><i className="fas fa-car" /></div>
-            <h3>3. Pick Up &amp; Go</h3>
+            <h3>4. Pick Up &amp; Go</h3>
             <p>We deliver to Portland Airport or your preferred location — on time, every time.</p>
           </div>
         </div>
@@ -321,6 +327,65 @@ export default function Home() {
           <button type="submit" className="btn btn-rating">Submit</button>
           <div className={`form-msg ${ratingMsg ? (ratingMsg.ok ? 'ok' : 'err') : ''}`}>{ratingMsg?.text}</div>
         </form>
+      </Section>
+
+      {/* AIRPORT PICKUP */}
+      <Section id="airport" className="airport-section">
+        <div className="airport-section-inner">
+          <div className="airport-section-text">
+            <div className="about-label">Portland Jetport · PWM</div>
+            <h2>We Deliver to the Airport</h2>
+            <p>Flying into Portland? Skip the rental counter. We bring your vehicle directly to Portland International Jetport — no shuttle, no waiting.</p>
+            <ul className="airport-section-list">
+              <li><i className="fas fa-check-circle" /> We track your flight for delays</li>
+              <li><i className="fas fa-check-circle" /> Meet you at arrivals</li>
+              <li><i className="fas fa-check-circle" /> Available 7 days a week</li>
+              <li><i className="fas fa-check-circle" /> Late-night pickups available</li>
+            </ul>
+            <Link to="/airport-pickup" className="btn btn-primary" style={{ marginTop: 16 }}>Airport Pickup Guide</Link>
+          </div>
+          <div className="airport-section-visual">
+            <div className="airport-visual-card">
+              <i className="fas fa-plane-arrival" />
+              <div>
+                <strong>Portland Jetport (PWM)</strong>
+                <span>Portland, Maine</span>
+              </div>
+            </div>
+            <div className="airport-steps-mini">
+              {['Book online','Share flight details','We track your flight','Meet at arrivals','Drive away'].map((s, i) => (
+                <div key={s} className="airport-step-mini">
+                  <span className="airport-step-mini-num">{i + 1}</span>
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* FAQ TEASER */}
+      <Section className="faq-teaser">
+        <div className="section-header light">
+          <h2>Common Questions</h2>
+          <p>Quick answers to what customers ask most</p>
+        </div>
+        <div className="faq-teaser-grid">
+          {[
+            { q: 'How old do I need to be?', a: 'You must be at least 21 years old with a valid driver\'s license.' },
+            { q: 'Is there a security deposit?', a: 'A refundable security deposit may be required. Details are discussed at booking.' },
+            { q: 'What if my flight is delayed?', a: 'We track flights for airport deliveries and adjust automatically. Just call us.' },
+            { q: 'Are there hidden fees?', a: 'No. We show the full price breakdown before you pay. What you see is what you pay.' },
+          ].map((item) => (
+            <div key={item.q} className="faq-teaser-item">
+              <h3><i className="fas fa-question-circle" /> {item.q}</h3>
+              <p>{item.a}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 32 }}>
+          <Link to="/faq" className="btn btn-primary">View All FAQs</Link>
+        </div>
       </Section>
 
       {/* CONTACT */}

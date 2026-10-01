@@ -10,6 +10,7 @@ const FALLBACK_IMG = '/images/fleet-card.png';
 export default function Payment() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState(null);
+  const [intentData, setIntentData] = useState(null);
   const [ready, setReady] = useState(false);
   const [msg, setMsg] = useState(null); // { ok, text }
   const [paying, setPaying] = useState(false);
@@ -74,6 +75,7 @@ export default function Payment() {
           identityProof: draft.identityProof,
         }),
       });
+      setIntentData(data);
 
       const { error, paymentIntent } = await stripeRef.current.confirmCardPayment(data.clientSecret, {
         payment_method: {
@@ -85,16 +87,22 @@ export default function Payment() {
       if (paymentIntent.status !== 'succeeded') { setMsg({ ok: false, text: 'Payment not completed' }); setPaying(false); return; }
 
       try {
-        await apiFetch('/confirm-payment', {
+        const confirmed = await apiFetch('/confirm-payment', {
           method: 'POST',
           body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
         });
+        const bookingData = confirmed.booking || {};
+        sessionStorage.setItem('confirmedBooking', JSON.stringify({
+          ...draft,
+          ...bookingData,
+          id: bookingData.id || draft.bookingId,
+        }));
         sessionStorage.removeItem('pendingBooking');
         setMsg({ ok: true, text: 'Payment successful! Booking confirmed.' });
-        setTimeout(() => navigate('/'), 2000);
+        setTimeout(() => navigate('/booking-confirmation'), 800);
       } catch {
         setMsg({ ok: false, warn: true, text: 'Payment received. Your booking is being finalized.' });
-        setTimeout(() => navigate('/'), 2500);
+        setTimeout(() => navigate('/booking-confirmation'), 1200);
       }
     } catch (e) {
       setMsg({ ok: false, text: e.message || 'Unable to reach the payment server. Please try again later.' });
@@ -133,9 +141,19 @@ export default function Payment() {
               </div>
 
               <div style={{ marginTop: 16 }}>
-                <div className="bsummary-row"><span>Pick-up</span><strong>{draft.pickup} · {draft.pickupDate}</strong></div>
-                <div className="bsummary-row"><span>Return</span><strong>{draft.returnDate}</strong></div>
+                <div className="bsummary-row"><span>Vehicle</span><strong>{draft.vehicleName}</strong></div>
+                <div className="bsummary-row"><span>Pick-up</span><strong>{draft.pickup}</strong></div>
+                <div className="bsummary-row"><span>Pick-up Date</span><strong>{draft.pickupDate}</strong></div>
+                <div className="bsummary-row"><span>Return Date</span><strong>{draft.returnDate}</strong></div>
+                {intentData?.days && <div className="bsummary-row"><span>Duration</span><strong>{intentData.days} day{intentData.days > 1 ? 's' : ''}</strong></div>}
+                {draft.deliveryFee > 0 && (
+                  <div className="bsummary-row"><span>Delivery Fee</span><strong>+${draft.deliveryFee}</strong></div>
+                )}
                 <div className="bsummary-row total"><span>Total</span><strong>${draft.totalAmount}</strong></div>
+                <div className="bsummary-row" style={{ marginTop: 8, padding: '10px 0', borderTop: '1px dashed #eee', fontSize: '0.82rem', color: '#888' }}>
+                  <span><i className="fas fa-info-circle" /> Security deposit</span>
+                  <span>Discussed at pickup</span>
+                </div>
               </div>
 
               <div style={{ marginTop: 20 }}>

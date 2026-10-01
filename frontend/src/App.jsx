@@ -4,6 +4,11 @@ import Home from './pages/Home';
 import Vehicle from './pages/Vehicle';
 import Booking from './pages/Booking';
 import Payment from './pages/Payment';
+import BookingConfirmation from './pages/BookingConfirmation';
+import MyBookings from './pages/MyBookings';
+import FAQ from './pages/FAQ';
+import AirportPickup from './pages/AirportPickup';
+import CancellationPolicy from './pages/CancellationPolicy';
 import IdentityComplete from './pages/IdentityComplete';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -35,6 +40,11 @@ export default function App() {
         <Route path="/vehicle/:id" element={<Vehicle />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/airport-pickup" element={<AirportPickup />} />
+        <Route path="/cancellation-policy" element={<CancellationPolicy />} />
         <Route path="/identity-complete" element={<IdentityComplete />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

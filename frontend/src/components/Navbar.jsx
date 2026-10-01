@@ -108,6 +108,16 @@ export default function Navbar() {
             </a>
           </li>
           <li>
+            <Link to="/airport-pickup" onClick={closeAll}>
+              <i className="fas fa-plane" /> Airport
+            </Link>
+          </li>
+          <li>
+            <Link to="/faq" onClick={closeAll}>
+              <i className="fas fa-question-circle" /> FAQ
+            </Link>
+          </li>
+          <li>
             <a href="/#contact" onClick={closeAll}>
               <i className="fas fa-envelope" /> Contact
             </a>
@@ -135,7 +145,7 @@ export default function Navbar() {
               </button>
               {userMenuOpen && (
                 <div className="nav-dropdown">
-                  <Link to="/#my-bookings" onClick={closeAll}>
+                  <Link to="/my-bookings" onClick={closeAll}>
                     <i className="fas fa-calendar-check" /> My Bookings
                   </Link>
                   {(role === 'host' || role === 'admin') && (

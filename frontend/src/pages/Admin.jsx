@@ -43,7 +43,11 @@ function adminFetch(path, options = {}) {
 
 // ── FLEET MODAL ───────────────────────────────────────────
 function CarModal({ open, car, allFleet, onClose, onSaved }) {
-  const [form, setForm] = useState({ year: '', make: '', model: '', category: 'SEDAN', price: '', imageUrl: '', features: '' });
+  const [form, setForm] = useState({
+    year: '', make: '', model: '', category: 'SEDAN', price: '', imageUrl: '', features: '',
+    seats: '', doors: '', transmission: '', fuel_type: '', mpg: '', mileage: '',
+    luggage_capacity: '', mileage_allowance: '', deposit: '', cancellation_policy: '',
+  });
   const [existingGallery, setExistingGallery] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
   const [imageFile, setImageFile] = useState(null);
@@ -66,10 +70,24 @@ function CarModal({ open, car, allFleet, onClose, onSaved }) {
         price: car.price ?? '',
         imageUrl: car.image_url || '',
         features: (car.features || []).join('\n'),
+        seats: car.seats || '',
+        doors: car.doors || '',
+        transmission: car.transmission || '',
+        fuel_type: car.fuel_type || '',
+        mpg: car.mpg || '',
+        mileage: car.mileage || '',
+        luggage_capacity: car.luggage_capacity || '',
+        mileage_allowance: car.mileage_allowance || '',
+        deposit: car.deposit || '',
+        cancellation_policy: car.cancellation_policy || '',
       });
       setExistingGallery([...(car.interior_images || [])]);
     } else {
-      setForm({ year: '', make: '', model: '', category: 'SEDAN', price: '', imageUrl: '', features: '' });
+      setForm({
+        year: '', make: '', model: '', category: 'SEDAN', price: '', imageUrl: '', features: '',
+        seats: '', doors: '', transmission: '', fuel_type: '', mpg: '', mileage: '',
+        luggage_capacity: '', mileage_allowance: '', deposit: '', cancellation_policy: '',
+      });
       setExistingGallery([]);
     }
     return undefined;
@@ -105,6 +123,16 @@ function CarModal({ open, car, allFleet, onClose, onSaved }) {
         image_url,
         interior_images: images,
         features: form.features.split('\n').map((f) => f.trim()).filter(Boolean),
+        seats: form.seats ? Number(form.seats) : undefined,
+        doors: form.doors ? Number(form.doors) : undefined,
+        transmission: form.transmission.trim() || undefined,
+        fuel_type: form.fuel_type.trim() || undefined,
+        mpg: form.mpg.trim() || undefined,
+        mileage: form.mileage.trim() || undefined,
+        luggage_capacity: form.luggage_capacity.trim() || undefined,
+        mileage_allowance: form.mileage_allowance.trim() || undefined,
+        deposit: form.deposit ? Number(form.deposit) : undefined,
+        cancellation_policy: form.cancellation_policy.trim() || undefined,
       };
       await adminFetch(car ? `/fleet/${car.id}` : '/fleet', {
         method: car ? 'PUT' : 'POST',
@@ -174,6 +202,27 @@ function CarModal({ open, car, allFleet, onClose, onSaved }) {
         </small>
         <label>Features (one per line)</label>
         <textarea rows="4" value={form.features} onChange={set('features')} placeholder={'Fuel Efficient\nAll-Wheel Drive\nSpacious Interior'} />
+        <details style={{ marginBottom: 10 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--navy)', fontSize: '0.88rem', marginBottom: 8 }}>Vehicle Specs (optional)</summary>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+            <div><label>Seats</label><input type="number" value={form.seats} onChange={set('seats')} placeholder="5" /></div>
+            <div><label>Doors</label><input type="number" value={form.doors} onChange={set('doors')} placeholder="4" /></div>
+            <div><label>Transmission</label><input value={form.transmission} onChange={set('transmission')} placeholder="Automatic" /></div>
+            <div><label>Fuel Type</label><input value={form.fuel_type} onChange={set('fuel_type')} placeholder="Gasoline" /></div>
+            <div><label>MPG</label><input value={form.mpg} onChange={set('mpg')} placeholder="28 city / 36 hwy" /></div>
+            <div><label>Mileage (odometer)</label><input value={form.mileage} onChange={set('mileage')} placeholder="32000" /></div>
+            <div><label>Luggage Capacity</label><input value={form.luggage_capacity} onChange={set('luggage_capacity')} placeholder="2 large bags" /></div>
+            <div><label>Security Deposit ($)</label><input type="number" value={form.deposit} onChange={set('deposit')} placeholder="500" /></div>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>Mileage Allowance</label>
+            <input value={form.mileage_allowance} onChange={set('mileage_allowance')} placeholder="Unlimited mileage included" />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>Cancellation Policy</label>
+            <input value={form.cancellation_policy} onChange={set('cancellation_policy')} placeholder="Free cancellation 24h before pickup" />
+          </div>
+        </details>
         {error && <div className="form-error" style={{ marginBottom: 8 }}>{error}</div>}
         <div className="admin-modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -289,6 +338,10 @@ export default function Admin() {
 
   const pendingCount = bookings.filter((b) => b.status === 'pending').length;
   const confirmedCount = bookings.filter((b) => b.status === 'confirmed').length;
+  const paidCount = bookings.filter((b) => b.status === 'paid').length;
+  const totalRevenue = bookings
+    .filter((b) => ['paid', 'confirmed'].includes(b.status))
+    .reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
 
   const updateStatus = async (id, status) => {
     await adminFetch(`/bookings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
@@ -390,6 +443,10 @@ export default function Admin() {
           <>
             <div className="admin-stats">
               <div className="stat-card">
+                <div className="stat-icon"><i className="fas fa-dollar-sign" /></div>
+                <div className="stat-info"><strong>${totalRevenue.toLocaleString()}</strong><span>Total Revenue</span></div>
+              </div>
+              <div className="stat-card">
                 <div className="stat-icon"><i className="fas fa-calendar-check" /></div>
                 <div className="stat-info"><strong>{bookings.length}</strong><span>Total Bookings</span></div>
               </div>
@@ -399,7 +456,7 @@ export default function Admin() {
               </div>
               <div className="stat-card">
                 <div className="stat-icon"><i className="fas fa-check-circle" /></div>
-                <div className="stat-info"><strong>{confirmedCount}</strong><span>Confirmed</span></div>
+                <div className="stat-info"><strong>{confirmedCount + paidCount}</strong><span>Confirmed / Paid</span></div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon"><i className="fas fa-envelope" /></div>
