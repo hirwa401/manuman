@@ -62,18 +62,26 @@ export default function BookingConfirmation() {
           {/* Booking summary */}
           <div className="confirmation-card">
             <h2><i className="fas fa-car" /> Booking Summary</h2>
+            <div className="conf-row"><span>Reservation #</span><strong style={{ color: 'var(--gold-dark)' }}>{shortId}</strong></div>
             <div className="conf-row"><span>Vehicle</span><strong>{booking.vehicleName || booking.vehicle_name}</strong></div>
             <div className="conf-row"><span>Pick-up Date</span><strong>{formatDate(booking.pickupDate || booking.pickup_date)}</strong></div>
             <div className="conf-row"><span>Return Date</span><strong>{formatDate(booking.returnDate || booking.return_date)}</strong></div>
             <div className="conf-row"><span>Pick-up Location</span><strong>{booking.pickup}</strong></div>
-            <div className="conf-row"><span>Customer</span><strong>{booking.customerName || booking.customer_name}</strong></div>
+            <div className="conf-row"><span>Name</span><strong>{booking.customerName || booking.customer_name}</strong></div>
             <div className="conf-row"><span>Email</span><strong>{booking.customerEmail || booking.customer_email}</strong></div>
-            {booking.totalAmount != null && (
-              <div className="conf-row conf-total"><span>Total Paid</span><strong>${booking.totalAmount || booking.total_amount}</strong></div>
+            {(booking.deliveryFee > 0 || booking.delivery_fee > 0) && (
+              <div className="conf-row"><span>Delivery Fee</span><strong>+${booking.deliveryFee || booking.delivery_fee}</strong></div>
+            )}
+            {(booking.totalAmount != null || booking.total_amount != null) && (
+              <div className="conf-row conf-total"><span>Total Charged Today</span><strong>${booking.totalAmount ?? booking.total_amount}</strong></div>
             )}
             <div className="conf-row">
-              <span>Status</span>
-              <span className="badge badge-confirmed">Confirmed</span>
+              <span>Security Deposit</span>
+              <span style={{ color: '#888', fontSize: '0.85rem' }}>Collected at pickup (if applicable)</span>
+            </div>
+            <div className="conf-row">
+              <span>Payment Status</span>
+              <span className="badge badge-confirmed">Paid</span>
             </div>
           </div>
 

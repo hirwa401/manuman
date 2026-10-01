@@ -230,7 +230,7 @@ export default function Booking() {
             <div className="bform-grid">
               <div className="bform-group">
                 <label><i className="fas fa-user" /> Full Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="name" />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
               </div>
               <div className="bform-group">
                 <label><i className="fas fa-envelope" /> Email</label>
@@ -241,15 +241,19 @@ export default function Booking() {
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="207-000-0000" />
               </div>
               <div className="bform-group">
-                <label><i className="fas fa-id-card" /> Driver's License / ID Number</label>
+                <label><i className="fas fa-id-card" /> Driver's License Number</label>
                 <input type="text" value={driverLicense} onChange={(e) => setDriverLicense(e.target.value)} placeholder="License or state ID number" />
+                <small style={{ color: '#888', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                  We collect your license number to match against the photo verification in the next step. ManuMan Mobility does not store your license image.
+                </small>
               </div>
               <div className="bform-group bform-full">
                 <div className="terms-box info">
-                  <strong><i className="fas fa-shield-alt" /> Secure license verification</strong>
-                  <small style={{ display: 'block', color: '#466177', marginTop: 6, lineHeight: 1.5 }}>
-                    Before payment, Stripe Identity securely verifies your driver's license and a live selfie.
-                    ManuMan Mobility does not receive or store your license image.
+                  <strong><i className="fas fa-shield-alt" /> Why do we verify your identity?</strong>
+                  <small style={{ display: 'block', color: '#466177', marginTop: 6, lineHeight: 1.6 }}>
+                    Maine law and our insurance require us to confirm every renter holds a valid driver's license.
+                    After you click <em>Continue</em>, Stripe Identity will ask you to photograph your license and take a quick selfie.
+                    This takes about 60 seconds. ManuMan Mobility never sees or stores your license photo — it is handled entirely by Stripe.
                   </small>
                 </div>
               </div>
@@ -257,7 +261,7 @@ export default function Booking() {
                 <div className="terms-box">
                   <label className="terms-checkbox">
                     <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-                    <span>I confirm I am at least 21 years old, hold a valid driver's license, and agree to the Terms &amp; Conditions.</span>
+                    <span>I confirm I am at least 21 years old, hold a valid driver's license, and agree to the <a href="/cancellation-policy" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a>.</span>
                   </label>
                 </div>
               </div>
@@ -267,22 +271,22 @@ export default function Booking() {
           {/* SUMMARY */}
           {pricing?.ok && (
             <div className="page-card">
-              <h2><i className="fas fa-receipt" /> Booking Summary</h2>
+              <h2><i className="fas fa-receipt" /> Price Breakdown</h2>
               <div className="summary-panel">
                 <div className="bsummary-row"><span>Vehicle</span><strong>{selectedCar.year} {selectedCar.make} {selectedCar.model}</strong></div>
-                <div className="bsummary-row"><span>Duration</span><strong>{pricing.days} day{pricing.days > 1 ? 's' : ''}{pricing.discount ? ' 🏷️ -10%' : ''}</strong></div>
-                <div className="bsummary-row"><span>Rate</span><strong>${selectedCar.price}/day</strong></div>
+                <div className="bsummary-row"><span>Duration</span><strong>{pricing.days} day{pricing.days > 1 ? 's' : ''}</strong></div>
+                <div className="bsummary-row"><span>Vehicle rental ({pricing.days} × ${selectedCar.price})</span><strong>${pricing.days * selectedCar.price}</strong></div>
                 {pricing.discount > 0 && (
-                  <div className="bsummary-row"><span>Weekly discount</span><strong style={{ color: '#2ecc71' }}>-${pricing.discount}</strong></div>
+                  <div className="bsummary-row"><span>🏷️ 8+ day discount (10%)</span><strong style={{ color: '#4caf50' }}>−${pricing.discount}</strong></div>
                 )}
                 {pricing.deliveryFee > 0 && (
-                  <div className="bsummary-row"><span>Delivery Fee</span><strong>+${pricing.deliveryFee}</strong></div>
+                  <div className="bsummary-row"><span>Delivery fee</span><strong>+${pricing.deliveryFee}</strong></div>
                 )}
-                <div className="bsummary-row total"><span>Total</span><strong>${pricing.total}</strong></div>
+                <div className="bsummary-row total"><span>Amount charged today</span><strong>${pricing.total}</strong></div>
               </div>
-              <div style={{ marginTop: 12, fontSize: '0.82rem', color: '#888', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <i className="fas fa-info-circle" style={{ color: 'var(--gold-dark)', marginTop: 2 }} />
-                <span>Security deposit discussed at pickup. See our <a href="/cancellation-policy" style={{ color: 'var(--navy)', fontWeight: 700 }}>Cancellation Policy</a> before booking.</span>
+              <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: 8, fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <i className="fas fa-info-circle" style={{ color: 'var(--gold)', marginTop: 2, flexShrink: 0 }} />
+                <span>Security deposit (if applicable) is collected at pickup — not charged today. <a href="/cancellation-policy" style={{ color: 'var(--gold)', fontWeight: 700 }}>Cancellation policy →</a></span>
               </div>
             </div>
           )}

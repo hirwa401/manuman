@@ -23,7 +23,7 @@ function Section({ id, children, className = '' }) {
 
 export default function Home() {
   const { user } = useAuth();
-  const [fleet, setFleet] = useState(null);
+  const [fleet, setFleet] = useState(null); // null = loading, [] = empty, [...] = loaded
   const [fleetError, setFleetError] = useState('');
   const [galleryCar, setGalleryCar] = useState(null);
   const [bookingsOpen, setBookingsOpen] = useState(false);
@@ -38,15 +38,15 @@ export default function Home() {
   const [contactMsg, setContactMsg] = useState(null);
   const [contactBusy, setContactBusy] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadFleet = () => {
+    setFleet(null);
+    setFleetError('');
     apiFetch('/fleet')
-      .then((data) => { if (!cancelled) setFleet(data); })
-      .catch((e) => { if (!cancelled) setFleetError(e.message); });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      .then((data) => setFleet(Array.isArray(data) ? data : []))
+      .catch((e) => setFleetError(e.message || 'Could not load fleet.'));
+  };
+
+  useEffect(() => { loadFleet(); }, []);
 
   // Deep links: /#my-bookings and /#become-host open their modals.
   useEffect(() => {
@@ -119,18 +119,18 @@ export default function Home() {
             Reliable Cars.<br /><span>Exceptional Experiences.</span>
           </h1>
           <p className="anim-fade-up" style={{ animationDelay: '0.1s' }}>
-            Portland, Maine's trusted car rental — clean vehicles, on-time delivery, and 5-star service every time.
+            Portland, Maine's locally owned car rental — clean vehicles, on-time delivery, and 5-star service every time.
           </p>
           <div className="hero-actions anim-fade-up" style={{ animationDelay: '0.2s' }}>
             <Link to="/booking" className="btn btn-primary btn-lg">Reserve Your Car</Link>
             <a href="#fleet" className="btn btn-outline btn-lg hero-outline">View Our Fleet</a>
           </div>
           <div className="hero-stats anim-fade-up" style={{ animationDelay: '0.3s' }}>
-            <div className="hero-stat"><strong>5★</strong><span>Turo Rating</span></div>
+            <div className="hero-stat"><strong>5★</strong><span>Turo Host Rating</span></div>
             <div className="hero-stat-divider" />
-            <div className="hero-stat"><strong>100+</strong><span>Happy Customers</span></div>
+            <div className="hero-stat"><strong>100+</strong><span>Completed Rentals</span></div>
             <div className="hero-stat-divider" />
-            <div className="hero-stat"><strong>3</strong><span>Vehicles Available</span></div>
+            <div className="hero-stat"><strong>PWM</strong><span>Airport Delivery</span></div>
           </div>
         </div>
         <a className="hero-scroll-hint" href="#about" aria-label="Scroll down">
@@ -192,12 +192,14 @@ export default function Home() {
           <p>Choose the perfect vehicle for your trip</p>
         </div>
         {fleetError && (
-          <p style={{ textAlign: 'center', color: '#888', padding: 40 }}>
-            Could not load fleet. Please call 207-245-0080.
-          </p>
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <i className="fas fa-exclamation-circle" style={{ fontSize: '2rem', color: '#ccc', display: 'block', marginBottom: 12 }} />
+            <p style={{ color: '#888', marginBottom: 16 }}>Could not load vehicles. Please try again or call <a href="tel:2072450080" style={{ color: 'var(--navy)', fontWeight: 700 }}>207-245-0080</a>.</p>
+            <button type="button" className="btn btn-primary btn-sm" onClick={loadFleet}><i className="fas fa-redo" /> Retry</button>
+          </div>
         )}
         <div className="cars-grid">
-          {!fleet && !fleetError && [1, 2, 3].map((n) => (
+          {fleet === null && !fleetError && [1, 2, 3].map((n) => (
             <div key={n} className="car-card skeleton">
               <div className="skel skel-img" />
               <div className="car-info">
@@ -208,7 +210,10 @@ export default function Home() {
               </div>
             </div>
           ))}
-          {fleet && fleet.map((car, i) => (
+          {Array.isArray(fleet) && fleet.length === 0 && !fleetError && (
+            <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#888', padding: 40 }}>No vehicles are currently available. Check back soon!</p>
+          )}
+          {Array.isArray(fleet) && fleet.map((car, i) => (
             <CarCard key={car.id} car={car} index={i} onOpenGallery={setGalleryCar} />
           ))}
         </div>
@@ -257,7 +262,7 @@ export default function Home() {
           <div className="why-card">
             <i className="fas fa-star" />
             <h3>5-Star Turo Host</h3>
-            <p>Consistently rated 5 stars by our customers on Turo.</p>
+            <p>Consistently rated 5 stars by our customers. <a href="https://turo.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold-dark)', fontWeight: 700 }}>See our Turo profile →</a></p>
           </div>
           <div className="why-card">
             <i className="fas fa-plane" />
